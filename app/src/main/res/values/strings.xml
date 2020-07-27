@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Weater</string>
+    <string name="temperature_unit">°</string>
+    <string name="feels_like">Feels like:</string>
+    <string name="cloudly">cloudly</string>
+
+</resources>
