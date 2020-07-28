@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initViews();
+        findViews();
         updateLocation();
         updateDate();
         updateTemp();
@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostResume() {
         super.onPostResume();
+        updateDate();
         handlerDateTime.postDelayed(dateTimeUpdater, DATE_TIME_UPDATE_MS);
     }
 
@@ -55,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
         if ( handlerDateTime == null) {
             handlerDateTime = new Handler();
         }
-
         if ( dateTimeUpdater == null ) {
             dateTimeUpdater = new Runnable() {
                 @Override
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         weatherView.setImageResource(R.mipmap.ic_cloudly);
     }
 
-    private void initViews() {
+    private void findViews() {
         cityView = findViewById( R.id.cityView );
         dateTimeView = findViewById( R.id.dateView );
         temperatureView = findViewById( R.id.tempView );
