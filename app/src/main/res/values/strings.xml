@@ -7,5 +7,6 @@
     <string name="currentcity">CurrentCity</string>
     <string name="temp">Temp</string>
     <string name="cloudiness">cloudiness</string>
+    <string name="testHelloWorld">Hello World!</string>
 
 </resources>
