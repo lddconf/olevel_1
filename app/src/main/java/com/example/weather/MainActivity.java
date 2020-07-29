@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -128,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateTemp() {
         int temp = 13; //градусов цельсия
-        String currentTemperature = Integer.toString(temp) + getString(R.string.temperature_unit);
+        String currentTemperature = Integer.toString(temp) + getString(R.string.temp_unit_celsius);
         temperatureView.setText(currentTemperature);
     }
 
@@ -137,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateFeelsLikeTempView() {
         int feelsLikeTemp = 11;
-        feelsLikeView.setText(getString(R.string.feels_like) + " " + Integer.toString(feelsLikeTemp) + getString(R.string.temperature_unit));
+        feelsLikeView.setText(getString(R.string.feels_like) + " " + Integer.toString(feelsLikeTemp) + getString(R.string.temp_unit_celsius));
     }
 
     /**

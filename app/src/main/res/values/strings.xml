@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Weather</string>
-    <string name="temperature_unit">°</string>
+    <string name="temp_unit_celsius">°</string>
+    <string name="temp_unit_fahrenheit">°F</string>
     <string name="feels_like">Feels like:</string>
     <string name="cloudly">cloudly</string>
     <string name="currentdatetime">CurrentDateTime</string>
@@ -32,5 +33,6 @@
     <string name="show_feels_like_string">Show feels like</string>
     <string name="ok_string">Ok</string>
     <string name="cancel_string">Cancel</string>
+    <string name="temperature_unit_title">Temperature unit</string>
 
 </resources>
