@@ -7,17 +7,6 @@
     tools:context="com.example.weather.MainActivity">
 
     <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/testHelloWorld"
-        />
-
-    <TextView
         android:id="@+id/cityView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -34,9 +23,10 @@
         android:id="@+id/imageView"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_marginStart="28dp"
         android:baselineAlignBottom="true"
         android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/dateView"
         app:layout_constraintTop_toTopOf="@+id/cityView" />
 
@@ -44,16 +34,16 @@
         android:id="@+id/dateView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
+
         android:text="@string/currentdatetime"
         android:textAlignment="center"
         android:textSize="25sp"
-        app:layout_constraintBottom_toBottomOf="@+id/textView4"
-        app:layout_constraintEnd_toEndOf="@+id/textView4"
-        app:layout_constraintHorizontal_bias="0.85"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageView"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textView4"
-        app:layout_constraintVertical_bias="0.836" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.4" />
 
     <TextView
         android:id="@+id/tempView"
@@ -74,12 +64,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="@string/feels_like"
-        android:textSize="30sp"
         android:textAlignment="center"
+        android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="@+id/tempView"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/tempView"
+        app:layout_constraintEnd_toEndOf="@+id/dateView"
+        app:layout_constraintStart_toStartOf="@+id/dateView"
         app:layout_constraintTop_toBottomOf="@+id/tempView"
         app:layout_constraintVertical_bias="0.0" />
 
@@ -87,8 +76,8 @@
         android:id="@+id/cloudinessView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAlignment="center"
         android:text="@string/cloudly"
+        android:textAlignment="center"
         android:textSize="25sp"
         app:layout_constraintBottom_toBottomOf="@+id/feelsLike"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
