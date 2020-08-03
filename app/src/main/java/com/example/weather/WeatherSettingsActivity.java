@@ -120,7 +120,7 @@ public class WeatherSettingsActivity extends AppCompatActivity {
 
             //Restore spinner value
             for ( int i = 0; i < citySpinner.getCount(); i++ ) {
-                if ( citySpinner.getItemAtPosition(i).toString().equals(settings.city) ) {
+                if ( citySpinner.getItemAtPosition(i).toString().equals(settings.getCity()) ) {
                     citySpinner.setSelection(i);
                 }
             }
@@ -184,7 +184,7 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, R.layout.settings_spinner_item, weatherProvider.getCitiesList());
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         citySpinner.setAdapter(arrayAdapter);
-        citySpinner.setSelection(arrayAdapter.getPosition(settings.city));
+        citySpinner.setSelection(arrayAdapter.getPosition(settings.getCity()));
     }
 
     private void findViews() {
@@ -200,14 +200,14 @@ public class WeatherSettingsActivity extends AppCompatActivity {
 }
 
 class WeatherSettingsActivityCurrentStatus implements Serializable {
-    String city;
-    boolean useFahrenheitTempUnit;
-    boolean showWindSpeed;
-    boolean showPressure;
-    boolean showFeelsLike;
+    private String city;
+    private boolean useFahrenheitTempUnit;
+    private boolean showWindSpeed;
+    private boolean showPressure;
+    private boolean showFeelsLike;
 
     public WeatherSettingsActivityCurrentStatus() {
-        this("Berlin", false, false, false, false);
+        this("Paris", false, false, false, false);
     }
 
     public WeatherSettingsActivityCurrentStatus(String city, boolean useFahrenheitTempUnit, boolean showWindSpeed, boolean showPressure, boolean showFeelsLike) {
