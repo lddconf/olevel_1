@@ -38,5 +38,7 @@
     <string name="on_this_day">https://www.timeanddate.com/on-this-day/</string>
     <string name="city_about">https://en.m.wikipedia.org/wiki/</string>
     <string name="date_format">E, dd MMMM HH:mm</string>
+    <string name="wind_label">Wind</string>
+    <string name="pressure_label">Pressure</string>
 
 </resources>

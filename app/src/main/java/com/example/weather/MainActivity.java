@@ -1,6 +1,7 @@
 package com.example.weather;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
@@ -15,7 +16,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -31,12 +31,15 @@ public class MainActivity extends AppCompatActivity {
     private TextView temperatureView;
     private TextView feelsLikeView;
     private TextView cloudinessView;
+    private TextView windView;
+    private TextView pressureView;
     private ImageView weatherView;
     private ImageView settingsViewButton;
 
     private MainActivitySettings settings;
 
-    private final String mainActivitySettingsKey = "AppMainActivitySettings";
+    private static final String mainActivitySettingsKey = "AppMainActivitySettings";
+    private static final int settingsChangedRequestCode = 0x1;
     private final String mainActivityTAG = "MainActivity";
     private BroadcastReceiver dateTimeChangedReceiver;
 
@@ -53,11 +56,8 @@ public class MainActivity extends AppCompatActivity {
         settings = new MainActivitySettings();
 
         findViews();
-        updateLocation();
-        updateTemp();
-        updateFeelsLikeTempView();
-        updateCloudinessView();
-        updateWeatherView();
+        updateViews();
+
         setupSettingsView();
         setupCityView();
         setupDateTimeViewOnClick();
@@ -96,6 +96,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Update all changeable views
+     */
+    private void updateViews() {
+        updateLocation();
+        updateTemp();
+        updateFeelsLikeTempView();
+        updateCloudinessView();
+        updateWeatherView();
+        updateWindView();
+        updatePressureView();
+    }
+
+    /**
      * Activity in restore instance stuff
      * @param savedInstanceState - saved instance
      */
@@ -106,11 +119,7 @@ public class MainActivity extends AppCompatActivity {
             MainActivitySettings savedSettings = (MainActivitySettings)savedInstanceState.getSerializable(mainActivitySettingsKey);
             if ( savedSettings != null ) {
                 settings = savedSettings;
-                updateLocation();
-                updateTemp();
-                updateFeelsLikeTempView();
-                updateCloudinessView();
-                updateWeatherView();
+                updateViews();
             }
         } catch (ClassCastException e) {
             e.printStackTrace();
@@ -149,9 +158,25 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
-                startActivity(settingsActivity);
+                settingsActivity.putExtra(mainActivitySettingsKey, settings);
+                startActivityForResult(settingsActivity, settingsChangedRequestCode);
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if ( data == null ) {
+            return;
+        }
+        //Apply new settings
+        if ( requestCode == this.settingsChangedRequestCode && resultCode == RESULT_OK ) {
+            MainActivitySettings newSettings;
+            newSettings = (MainActivitySettings)data.getSerializableExtra(mainActivitySettingsKey);
+            settings = newSettings;
+            updateViews();
+        }
     }
 
     /**
@@ -225,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
         cityView.setText(settings.getCity());
     }
 
+
+
     /**
      * Update date-time status view
      */
@@ -247,7 +274,30 @@ public class MainActivity extends AppCompatActivity {
      * Update weather feels like status
      */
     private void updateFeelsLikeTempView() {
-        feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLike(), settings.getTempUnit()));
+        if ( settings.isShowFeelsLike() ) {
+            feelsLikeView.setVisibility(View.VISIBLE);
+            feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLike(), settings.getTempUnit()));
+        } else {
+            feelsLikeView.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateWindView() {
+        if (settings.isShowWind()) {
+            windView.setVisibility(View.VISIBLE);
+            windView.setText(String.format(Locale.getDefault(), "%.1f m/s", settings.getWindSpeed()));
+        } else {
+            windView.setVisibility(View.GONE);
+        }
+    }
+
+    private void updatePressureView() {
+        if (settings.isShowPressure()) {
+            pressureView.setVisibility(View.VISIBLE);
+            pressureView.setText(String.format(Locale.getDefault(),"%d mm", settings.getPressureBar()));
+        } else {
+            pressureView.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -288,6 +338,8 @@ public class MainActivity extends AppCompatActivity {
         weatherView = findViewById( R.id.imageView);
         cloudinessView = findViewById( R.id.cloudinessView);
         settingsViewButton = findViewById(R.id.settingsButton);
+        windView = findViewById(R.id.windView);
+        pressureView = findViewById(R.id.pressureView);
     }
 
 }
