@@ -36,11 +36,20 @@
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/cityDetails"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="fitXY"
+        android:layout_marginEnd="5dp"
+        app:layout_constraintEnd_toStartOf="@+id/cityView"
+        app:layout_constraintTop_toTopOf="@+id/cityView" />
+
     <TextView
         android:id="@+id/dateView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
         android:text="@string/currentdatetime"
         android:textAlignment="center"
         android:textSize="25sp"

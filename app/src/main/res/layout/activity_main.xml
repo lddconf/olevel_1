@@ -48,6 +48,15 @@
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/cityDetails"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="fitXY"
+        android:layout_marginStart="5dp"
+        app:layout_constraintStart_toEndOf="@+id/cityView"
+        app:layout_constraintTop_toTopOf="@+id/cityView" />
     <TextView
         android:id="@+id/dateView"
         android:layout_width="wrap_content"

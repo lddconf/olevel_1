@@ -34,5 +34,9 @@
     <string name="ok_string">Ok</string>
     <string name="cancel_string">Cancel</string>
     <string name="temperature_unit_title">Temperature unit</string>
+    <string name="weather_yandex">https://yandex.com/weather/%s</string>
+    <string name="on_this_day">https://www.timeanddate.com/on-this-day/</string>
+    <string name="city_about">https://en.m.wikipedia.org/wiki/</string>
+    <string name="date_format">E, dd MMMM HH:mm</string>
 
 </resources>

@@ -47,6 +47,15 @@
         app:layout_constraintTop_toBottomOf="@+id/dateView"
         app:layout_constraintVertical_bias="0.0" />
 
+    <ImageView
+        android:id="@+id/cityDetails"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="fitXY"
+        android:layout_marginStart="5dp"
+        app:layout_constraintStart_toEndOf="@+id/cityView"
+        app:layout_constraintTop_toTopOf="@+id/cityView" />
+
     <TextView
         android:id="@+id/dateView"
         android:layout_width="wrap_content"
