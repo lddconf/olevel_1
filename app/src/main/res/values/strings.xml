@@ -3,7 +3,7 @@
     <string name="temp_unit_celsius">°</string>
     <string name="temp_unit_fahrenheit">°F</string>
     <string name="feels_like">Feels like:</string>
-    <string name="cloudly">cloudly</string>
+    <string name="cloudy">cloudy</string>
     <string name="currentdatetime">CurrentDateTime</string>
     <string name="currentcity">CurrentCity</string>
     <string name="temp">Temp</string>
