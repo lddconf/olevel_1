@@ -28,14 +28,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/dateView"
-        app:layout_constraintTop_toTopOf="@+id/cityView" />
+        app:layout_constraintTop_toTopOf="@+id/cityView"
+        android:contentDescription="@string/cloudiness" />
+
     <ImageView
         android:id="@+id/settingsButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/settings_label"/>
 
     <TextView
         android:id="@+id/dateView"
@@ -43,13 +46,13 @@
         android:layout_height="wrap_content"
         android:text="@string/currentdatetime"
         android:textAlignment="center"
-        android:textSize="25sp"
+        android:textSize="22sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/imageView"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.4" />
+        app:layout_constraintVertical_bias="0.33" />
 
     <TextView
         android:id="@+id/tempView"
@@ -82,15 +85,15 @@
         android:id="@+id/cloudinessView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:text="@string/cloudy"
         android:textAlignment="center"
         android:textSize="25sp"
         app:layout_constraintBottom_toBottomOf="@+id/feelsLike"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.5" />
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
     <TextView
         android:id="@+id/pressureView"
         android:layout_width="wrap_content"

@@ -40,5 +40,6 @@
     <string name="date_format">E, dd MMMM HH:mm</string>
     <string name="wind_label">Wind</string>
     <string name="pressure_label">Pressure</string>
+    <string name="settings_label">Settings</string>
 
 </resources>

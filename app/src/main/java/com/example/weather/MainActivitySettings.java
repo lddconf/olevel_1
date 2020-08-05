@@ -12,7 +12,7 @@ class MainActivitySettings implements Serializable {
     private int pressureBar;
     private String cloudiness;
     private String city;
-    private String tempUnit;
+    private boolean useCelsiusUnit;
     private boolean showFeelsLike;
     private boolean showPressure;
     private boolean showWind;
@@ -25,7 +25,7 @@ class MainActivitySettings implements Serializable {
         feelsLike = (int)(Math.random() * 40);
         city = "Moscow";
         cloudiness = "cloudy";
-        tempUnit = "\u2103";
+        useCelsiusUnit = true;
         windSpeed = (Math.random() * 10);
         pressureBar = 765 - (int)(Math.random()*10);
         showFeelsLike = true;
@@ -45,7 +45,7 @@ class MainActivitySettings implements Serializable {
      * Get current feels like temperature
      * @return feels like temperature
      */
-    public int getFeelsLike() {
+    public int getFeelsLikeTemp() {
         return feelsLike;
     }
 
@@ -69,8 +69,8 @@ class MainActivitySettings implements Serializable {
      * Get current temperature display unit
      * @return current temperature unit
      */
-    public String getTempUnit() {
-        return tempUnit;
+    public boolean useCelsiusUnit() {
+        return useCelsiusUnit;
     }
 
     /**
@@ -111,5 +111,78 @@ class MainActivitySettings implements Serializable {
      */
     public boolean isShowWind() {
         return showWind;
+    }
+
+    /**
+     * Setup new city
+     * @param city name of specified location
+     */
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    /**
+     * Setup temperature
+     * @param temperature temperature value
+     */
+    public void setTemperature(int temperature) {
+        this.temperature = temperature;
+    }
+
+    /**
+     * Setup feels like temperature
+     * @param feelsLike temperature value
+     */
+    public void setFeelsLikeTemperature(int feelsLike) {
+        this.feelsLike = feelsLike;
+    }
+
+    /**
+     * Setup temperature unit
+     * @param isCelsiusUnit if true using celsius notation
+     */
+    public void setUseCelsiusUnit(boolean isCelsiusUnit) {
+        if ( this.useCelsiusUnit == isCelsiusUnit ) return;
+
+        if ( isCelsiusUnit && (!this.useCelsiusUnit()) ) {
+            //Recalculate for celsius to fahrenheit
+            float inCelsius = Math.round((getTemperature() - 32f) / 1.8f);
+            setTemperature((int)inCelsius);
+
+            inCelsius = Math.round((getFeelsLikeTemp() - 32f) / 1.8f);
+            setFeelsLikeTemperature((int)inCelsius);
+        } else  {
+            //Recalculate from fahrenheit to celsius
+            float inFahrenheit = Math.round(getTemperature()*1.8f + 32f);
+            setTemperature((int)inFahrenheit);
+
+            inFahrenheit = Math.round(getFeelsLikeTemp()*1.8f + 32f);
+            setFeelsLikeTemperature((int)inFahrenheit);
+        }
+        this.useCelsiusUnit = isCelsiusUnit;
+    }
+
+    /**
+     * Setup feels like field
+     * @param showFeelsLike display feels like field
+     */
+    public void setShowFeelsLike(boolean showFeelsLike) {
+        this.showFeelsLike = showFeelsLike;
+    }
+
+    /**
+     * Setup pressure field
+     * @param showPressure display pressure field
+     */
+    public void setShowPressure(boolean showPressure) {
+        this.showPressure = showPressure;
+    }
+
+    /**
+     * Setup wind field
+     * @param showWind display wind field
+     */
+    public void setShowWind(boolean showWind) {
+        this.showWind = showWind;
     }
 }

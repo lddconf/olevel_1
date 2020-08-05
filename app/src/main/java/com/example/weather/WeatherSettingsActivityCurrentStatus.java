@@ -21,6 +21,14 @@ class WeatherSettingsActivityCurrentStatus implements Serializable {
         this.showFeelsLike = showFeelsLike;
     }
 
+    public WeatherSettingsActivityCurrentStatus(MainActivitySettings settings) {
+        this.city = settings.getCity();
+        this.useFahrenheitTempUnit = !settings.useCelsiusUnit();
+        this.showWindSpeed = settings.isShowWind();
+        this.showPressure = settings.isShowPressure();
+        this.showFeelsLike = settings.isShowFeelsLike();
+    }
+
     public String getCity() {
         return city;
     }

@@ -39,11 +39,11 @@ public class MainActivity extends AppCompatActivity {
     private MainActivitySettings settings;
 
     private static final String mainActivitySettingsKey = "AppMainActivitySettings";
+    static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
     private static final int settingsChangedRequestCode = 0x1;
-    private final String mainActivityTAG = "MainActivity";
-    private BroadcastReceiver dateTimeChangedReceiver;
-
     private static final boolean debug = false;
+
+    private BroadcastReceiver dateTimeChangedReceiver;
 
     /**
      * Activity on create stuff
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
-                settingsActivity.putExtra(mainActivitySettingsKey, settings);
+                settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(settings));
                 startActivityForResult(settingsActivity, settingsChangedRequestCode);
             }
         });
@@ -171,10 +171,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         //Apply new settings
-        if ( requestCode == this.settingsChangedRequestCode && resultCode == RESULT_OK ) {
-            MainActivitySettings newSettings;
-            newSettings = (MainActivitySettings)data.getSerializableExtra(mainActivitySettingsKey);
-            settings = newSettings;
+        if ( requestCode == settingsChangedRequestCode && resultCode == RESULT_OK ) {
+            WeatherSettingsActivityCurrentStatus newViewSettings;
+            newViewSettings = (WeatherSettingsActivityCurrentStatus)data.getSerializableExtra(mainActivityViewOptionsKey);
+            assert newViewSettings != null;
+            settings.setCity(newViewSettings.getCity());
+            settings.setUseCelsiusUnit(!newViewSettings.isFahrenheitTempUnit());
+            settings.setShowFeelsLike(newViewSettings.isShowFeelsLike());
+            settings.setShowWind(newViewSettings.isShowWindSpeed());
+            settings.setShowPressure(newViewSettings.isShowPressure());
             updateViews();
         }
     }
@@ -266,7 +271,12 @@ public class MainActivity extends AppCompatActivity {
      * Update temperature value in view
      */
     private void updateTemp() {
-        String currentTemperature = settings.getTemperature() + settings.getTempUnit();
+        String currentTemperature = Integer.toString(settings.getTemperature());
+        if ( settings.useCelsiusUnit() ) {
+            currentTemperature += getString(R.string.temp_unit_celsius);
+        } else {
+            currentTemperature += getString(R.string.temp_unit_fahrenheit);
+        }
         temperatureView.setText(currentTemperature);
     }
 
@@ -276,7 +286,11 @@ public class MainActivity extends AppCompatActivity {
     private void updateFeelsLikeTempView() {
         if ( settings.isShowFeelsLike() ) {
             feelsLikeView.setVisibility(View.VISIBLE);
-            feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLike(), settings.getTempUnit()));
+            String tempUnit = getString(R.string.temp_unit_celsius);
+            if ( !settings.useCelsiusUnit() ) {
+                tempUnit = getString(R.string.temp_unit_fahrenheit);
+            }
+            feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLikeTemp(), tempUnit));
         } else {
             feelsLikeView.setVisibility(View.GONE);
         }
@@ -318,10 +332,11 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Debug purposes
-     * @param textToPrint
+     * @param textToPrint - some debug text
      */
     private void onDebug(String textToPrint) {
         if ( debug ) {
+            String mainActivityTAG = "MainActivity";
             Log.d(mainActivityTAG, textToPrint);
             Toast.makeText(getApplicationContext(), textToPrint, Toast.LENGTH_SHORT).show();
         }
