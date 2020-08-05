@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -26,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView feelsLikeView;
     private TextView cloudinessView;
     private ImageView weatherView;
+    private ImageView settingsViewButton;
+
 
     private BroadcastReceiver dateTimeChangedReceiver;
 
@@ -37,14 +40,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         findViews();
         updateLocation();
-
         updateTemp();
         updateFeelsLikeTempView();
         updateCloudinessView();
         updateWeatherView();
+        setupSettingsView();
+
     }
 
     /**
@@ -63,6 +66,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         initDateTimeUpdate();
+    }
+
+    private void setupSettingsView() {
+        settingsViewButton.setImageResource(R.mipmap.ic_settings);
+        settingsViewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
+                startActivity(settingsActivity);
+            }
+        });
     }
 
     /**
@@ -113,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateTemp() {
         int temp = 13; //градусов цельсия
-        String currentTemperature = Integer.toString(temp) + getString(R.string.temperature_unit);
+        String currentTemperature = Integer.toString(temp) + getString(R.string.temp_unit_celsius);
         temperatureView.setText(currentTemperature);
     }
 
@@ -122,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateFeelsLikeTempView() {
         int feelsLikeTemp = 11;
-        feelsLikeView.setText(getString(R.string.feels_like) + " " + Integer.toString(feelsLikeTemp) + getString(R.string.temperature_unit));
+        feelsLikeView.setText(getString(R.string.feels_like) + " " + Integer.toString(feelsLikeTemp) + getString(R.string.temp_unit_celsius));
     }
 
     /**
@@ -149,5 +163,6 @@ public class MainActivity extends AppCompatActivity {
         feelsLikeView = findViewById( R.id.feelsLike );
         weatherView = findViewById( R.id.imageView);
         cloudinessView = findViewById( R.id.cloudinessView);
+        settingsViewButton = findViewById(R.id.settingsButton);
     }
 }
