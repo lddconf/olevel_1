@@ -31,8 +31,8 @@
     <string name="show_string">Show</string>
     <string name="hide_string">Hide</string>
     <string name="show_feels_like_string">Show feels like</string>
-    <string name="ok_string">Ok</string>
-    <string name="cancel_string">Cancel</string>
+    <string name="ok_label">Ok</string>
+    <string name="cancel_label">Cancel</string>
     <string name="temperature_unit_title">Temperature unit</string>
     <string name="weather_yandex">https://yandex.com/weather/%s</string>
     <string name="on_this_day">https://www.timeanddate.com/on-this-day/</string>
@@ -41,5 +41,7 @@
     <string name="wind_label">Wind</string>
     <string name="pressure_label">Pressure</string>
     <string name="settings_label">Settings</string>
+    <string name="weather_settings_title">Weather Settings</string>
+    <string name="dnt_save_close_label">Don\'t save and close</string>
 
 </resources>

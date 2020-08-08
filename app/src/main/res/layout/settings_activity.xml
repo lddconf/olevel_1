@@ -1,36 +1,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-    <LinearLayout
+    android:orientation="vertical"
+    android:fitsSystemWindows="true">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/settings_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
-        <Button
-            android:id="@+id/okButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingVertical="10dp"
-            android:text="@string/ok_string"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:textSize="20sp"
-            />
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="3" />
-        <Button
-            android:id="@+id/cancelButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingVertical="10dp"
-            android:text="@string/cancel_string"
-            android:layout_marginEnd="10dp"
-            android:textSize="20sp"
-            android:layout_weight="1"/>
-    </LinearLayout>
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

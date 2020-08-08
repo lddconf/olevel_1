@@ -24,21 +24,22 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:baselineAlignBottom="true"
+        android:contentDescription="@string/cloudiness"
         android:scaleType="fitXY"
+        app:layout_constraintDimensionRatio=""
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/dateView"
-        app:layout_constraintTop_toTopOf="@+id/cityView"
-        android:contentDescription="@string/cloudiness" />
+        app:layout_constraintTop_toTopOf="@+id/cityView" />
 
     <ImageView
         android:id="@+id/settingsButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:contentDescription="@string/settings_label"
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/settings_label"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/dateView"
@@ -85,13 +86,13 @@
         android:id="@+id/cloudinessView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+
         android:text="@string/cloudy"
         android:textAlignment="center"
         android:textSize="25sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/feelsLike"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintStart_toStartOf="@+id/imageView" />
 
     <TextView
         android:id="@+id/pressureView"
@@ -115,4 +116,20 @@
         app:layout_constraintEnd_toStartOf="@id/imageView"
         app:layout_constraintStart_toEndOf="@+id/pressureView"
         app:layout_constraintTop_toBottomOf="@+id/feelsLike" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="end"
+        app:constraint_referenced_ids="dateView,pressureView,tempView,windView,cityView,feelsLike"
+        tools:layout_editor_absoluteX="683dp" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="cloudinessView,feelsLike,pressureView,windView"
+        tools:layout_editor_absoluteY="386dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

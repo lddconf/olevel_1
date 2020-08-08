@@ -162,6 +162,7 @@ class MainActivitySettings implements Serializable {
         this.useCelsiusUnit = isCelsiusUnit;
     }
 
+
     /**
      * Setup feels like field
      * @param showFeelsLike display feels like field

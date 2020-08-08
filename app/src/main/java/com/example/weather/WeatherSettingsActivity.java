@@ -1,8 +1,12 @@
 package com.example.weather;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -10,28 +14,31 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.example.weather.weather.SimpleWeatherProvider;
 import com.example.weather.weather.WeatherProviderInterface;
+
+
+import java.util.Objects;
 
 
 /**
  * Weather ac
  */
 public class WeatherSettingsActivity extends AppCompatActivity {
-    private Button okButton;
-    private Button cancelButton;
     private Spinner citySpinner;
     private Switch showWindSwitch;
     private Switch showPressure;
     private Switch showFeelsLike;
     private Switch temperatureUnit;
     private WeatherSettingsActivityCurrentStatus settings;
-
+    private Toolbar headToolBar;
     private final String weatherSettingsActivityKey = "WeatherSettingsActivityKey";
     private static WeatherProviderInterface weatherProvider = new SimpleWeatherProvider();
 
@@ -44,13 +51,12 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         settings = (WeatherSettingsActivityCurrentStatus)getIntent().getSerializableExtra(MainActivity.mainActivityViewOptionsKey);
 
         findViews();
-        setupOkButtonOnClickListener();
-        setupCancelButtonOnClickListener();
         setupCityListSpinner();
         setupTemperatureUnit();
         setupWindSwitch();
         setupPressureSwitch();
         setupFeelsLikeSwitch();
+        setupHeadToolBar();
 
         updateShowWindSpeed();
         updateShowPressure();
@@ -190,28 +196,6 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         temperatureUnit.setText(displayText.toCharArray(),0, displayText.length());
     }
 
-    private void setupOkButtonOnClickListener() {
-        okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent appliedSettings = new Intent();
-                appliedSettings.putExtra(MainActivity.mainActivityViewOptionsKey, settings);
-                setResult(RESULT_OK, appliedSettings);
-                finish();
-            }
-        });
-    }
-
-    private void setupCancelButtonOnClickListener() {
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setResult(RESULT_CANCELED);
-                finish();
-            }
-        });
-    }
-
     private void setupCityListSpinner() {
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, R.layout.settings_spinner_item, weatherProvider.getCitiesList());
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -231,13 +215,60 @@ public class WeatherSettingsActivity extends AppCompatActivity {
     }
 
     private void findViews() {
-        okButton = findViewById(R.id.okButton);
-        cancelButton = findViewById(R.id.cancelButton);
         citySpinner = findViewById(R.id.citySelection);
         showFeelsLike = findViewById(R.id.enableFeelsLike);
         showWindSwitch = findViewById(R.id.enableWindView);
         showPressure = findViewById(R.id.enablePressure);
         temperatureUnit = findViewById(R.id.temperatureUnit);
+        headToolBar = findViewById(R.id.settings_toolbar);
+    }
+
+    private void setupHeadToolBar() {
+        setSupportActionBar(headToolBar);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowCustomEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(true);
+        //headToolBar.setTitle(R.string.weather_settings_title);
+    }
+
+    /**
+     * Add toolbar some menus
+     * @param menu - customizing menus of activity
+     * @return true if menu displayed
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.settings_menu, menu);
+        return true;//super.onCreateOptionsMenu(menu);
+    }
+
+    /**
+     * Handle toolbar menu options
+     * @param item selected item
+     * @return true if processed here
+     */
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            case R.id.actionCancel:
+                setResult(RESULT_CANCELED);
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent appliedSettings = new Intent();
+        appliedSettings.putExtra(MainActivity.mainActivityViewOptionsKey, settings);
+        setResult(RESULT_OK, appliedSettings);
+        finish();
     }
 
     /**
