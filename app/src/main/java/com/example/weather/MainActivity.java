@@ -3,14 +3,19 @@ package com.example.weather;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -20,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Main Weather Info Activity
@@ -34,8 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView windView;
     private TextView pressureView;
     private ImageView weatherView;
-    private ImageView settingsViewButton;
-
+    private Toolbar mainToolBar;
     private MainActivitySettings settings;
 
     private static final String mainActivitySettingsKey = "AppMainActivitySettings";
@@ -56,13 +61,11 @@ public class MainActivity extends AppCompatActivity {
         settings = new MainActivitySettings();
 
         findViews();
-        updateViews();
-
-        setupSettingsView();
         setupCityView();
         setupDateTimeViewOnClick();
         setupTemperatureViewOnClick();
-
+        setupActionBar();
+        updateViews();
         onDebug("onCreate");
     }
 
@@ -82,6 +85,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         onDebug("onStop");
+    }
+
+    /**
+     * Setup action bar
+     */
+    void setupActionBar() {
+        setSupportActionBar(mainToolBar);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
+
+        mainToolBar.setBackground(new ColorDrawable(getResources().getColor(R.color.background)));
+    }
+
+
+    /**
+     * Add toolbar some menus
+     * @param menu - customizing menus of activity
+     * @return true if menu displayed
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    /**
+     * Process toolbar menus onclick action
+     * @param item item to processing
+     * @return true if item was processed
+     */
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.actionSettings:
+                showSettings();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     /**
@@ -149,19 +191,14 @@ public class MainActivity extends AppCompatActivity {
         onDebug("onResume");
     }
 
+
     /**
-     * Setup settings view button
+     * Dislay settings activity
      */
-    private void setupSettingsView() {
-        settingsViewButton.setImageResource(R.mipmap.ic_settings);
-        settingsViewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
-                settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(settings));
-                startActivityForResult(settingsActivity, settingsChangedRequestCode);
-            }
-        });
+    private void showSettings() {
+        Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
+        settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(settings));
+        startActivityForResult(settingsActivity, settingsChangedRequestCode);
     }
 
     @Override
@@ -352,9 +389,9 @@ public class MainActivity extends AppCompatActivity {
         feelsLikeView = findViewById( R.id.feelsLike );
         weatherView = findViewById( R.id.imageView);
         cloudinessView = findViewById( R.id.cloudinessView);
-        settingsViewButton = findViewById(R.id.settingsButton);
         windView = findViewById(R.id.windView);
         pressureView = findViewById(R.id.pressureView);
+        mainToolBar = findViewById(R.id.mainToolbar);
     }
 
 }
