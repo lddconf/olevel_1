@@ -26,20 +26,22 @@
         app:layout_constraintBottom_toTopOf="@+id/dateView"
         app:layout_constraintEnd_toEndOf="@+id/dateView"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/dateView" />
+        app:layout_constraintStart_toStartOf="@+id/dateView"
+        />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:baselineAlignBottom="true"
+        android:scaleType="fitXY"
         app:layout_constraintBottom_toTopOf="@id/textView4"
         app:layout_constraintHorizontal_bias="0.5"
-        android:scaleType="fitXY"
         app:layout_constraintLeft_toLeftOf="@id/dateView"
         app:layout_constraintRight_toRightOf="@id/dateView"
         app:layout_constraintTop_toBottomOf="@+id/dateView"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.0"
+        android:contentDescription="@string/cloudiness"/>
 
     <ImageView
         android:id="@+id/settingsButton"
@@ -47,7 +49,9 @@
         android:layout_height="60dp"
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/settings_label"/>
+
     <TextView
         android:id="@+id/dateView"
         android:layout_width="wrap_content"
@@ -77,11 +81,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="@string/feels_like"
-        android:textSize="30sp"
-        app:layout_constraintEnd_toEndOf="@+id/tempView"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="@+id/cloudinessView"
         app:layout_constraintHorizontal_bias="0.50"
-        app:layout_constraintStart_toStartOf="@+id/tempView"
-        app:layout_constraintTop_toBottomOf="@+id/tempView" />
+        app:layout_constraintStart_toStartOf="@+id/cloudinessView"
+        app:layout_constraintTop_toBottomOf="@+id/cloudinessView" />
 
     <TextView
         android:id="@+id/cloudinessView"
@@ -90,9 +94,31 @@
         android:layout_marginTop="10dp"
         android:text="@string/cloudiness"
         android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="@+id/feelsLike"
-        app:layout_constraintStart_toStartOf="@+id/feelsLike"
+        app:layout_constraintEnd_toEndOf="@+id/tempView"
+        app:layout_constraintStart_toStartOf="@+id/tempView"
+        app:layout_constraintTop_toBottomOf="@+id/tempView" />
+
+    <TextView
+        android:id="@+id/pressureView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/pressure_label"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@id/pressureView"
+        app:layout_constraintEnd_toStartOf="@+id/windView"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/feelsLike" />
 
+    <TextView
+        android:id="@+id/windView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/wind_label"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/pressureView"
+        app:layout_constraintTop_toBottomOf="@+id/feelsLike" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

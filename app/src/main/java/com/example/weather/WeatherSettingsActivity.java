@@ -1,8 +1,10 @@
 package com.example.weather;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -15,8 +17,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.weather.weather.SimpleWeatherProvider;
 import com.example.weather.weather.WeatherProviderInterface;
-
-import java.io.Serializable;
 
 
 /**
@@ -32,63 +32,63 @@ public class WeatherSettingsActivity extends AppCompatActivity {
     private Switch temperatureUnit;
     private WeatherSettingsActivityCurrentStatus settings;
 
-    private final String weatherSettingsActivityTAG = "WeatherSettingsActivity";
     private final String weatherSettingsActivityKey = "WeatherSettingsActivityKey";
     private static WeatherProviderInterface weatherProvider = new SimpleWeatherProvider();
 
+    private static final boolean debug = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings_activity);
-        settings = new WeatherSettingsActivityCurrentStatus();
+        settings = (WeatherSettingsActivityCurrentStatus)getIntent().getSerializableExtra(MainActivity.mainActivityViewOptionsKey);
 
         findViews();
         setupOkButtonOnClickListener();
         setupCancelButtonOnClickListener();
         setupCityListSpinner();
         setupTemperatureUnit();
+        setupWindSwitch();
+        setupPressureSwitch();
+        setupFeelsLikeSwitch();
+
         updateShowWindSpeed();
         updateShowPressure();
         updateShowFeelsLike();
 
-        Log.d(weatherSettingsActivityTAG, "onCreate");
-        Toast.makeText(getApplicationContext(), "onCreate", Toast.LENGTH_SHORT).show();
+
+
+        onDebug("onCreate");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(weatherSettingsActivityTAG, "onDestroy");
-        Toast.makeText(getApplicationContext(), "onDestroy", Toast.LENGTH_SHORT).show();
+        onDebug("onDestroy");
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d(weatherSettingsActivityTAG, "onStart");
-        Toast.makeText(getApplicationContext(), "onStart", Toast.LENGTH_SHORT).show();
+        onDebug("onStart");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(weatherSettingsActivityTAG, "onStop");
-        Toast.makeText(getApplicationContext(), "onStop", Toast.LENGTH_SHORT).show();
+        onDebug("onStop");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(weatherSettingsActivityTAG, "onPause");
-        Toast.makeText(getApplicationContext(), "onPause", Toast.LENGTH_SHORT).show();
+        onDebug("onPause");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(weatherSettingsActivityTAG, "onResume");
-        Toast.makeText(getApplicationContext(), "onResume", Toast.LENGTH_SHORT).show();
+        onDebug("onResume");
     }
 
     @Override
@@ -100,8 +100,8 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         settings.setShowWindSpeed(showWindSwitch.isChecked());
         settings.setTemperatureUnit(temperatureUnit.isChecked());
         outState.putSerializable(weatherSettingsActivityKey, settings);
-        Log.d(weatherSettingsActivityTAG, "onSaveInstanceState");
-        Toast.makeText(getApplicationContext(), "onSaveInstanceState", Toast.LENGTH_SHORT).show();
+
+        onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
     }
 
@@ -125,8 +125,8 @@ public class WeatherSettingsActivity extends AppCompatActivity {
                 }
             }
         }
-        Log.d(weatherSettingsActivityTAG, "savedInstanceState");
-        Toast.makeText(getApplicationContext(), "savedInstanceState", Toast.LENGTH_SHORT).show();
+
+        onDebug("savedInstanceState");
     }
 
     private void setupTemperatureUnit() {
@@ -136,6 +136,34 @@ public class WeatherSettingsActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 updateTemperatureUnit();
+                settings.setTemperatureUnit(isChecked);
+            }
+        });
+    }
+
+    private void setupWindSwitch() {
+        showWindSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                settings.setShowWindSpeed(b);
+            }
+        });
+    }
+
+    private void setupPressureSwitch() {
+        showPressure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                settings.setShowPressure(b);
+            }
+        });
+    }
+
+    private void setupFeelsLikeSwitch() {
+        showFeelsLike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                settings.setShowFeelsLike(b);
             }
         });
     }
@@ -166,6 +194,9 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Intent appliedSettings = new Intent();
+                appliedSettings.putExtra(MainActivity.mainActivityViewOptionsKey, settings);
+                setResult(RESULT_OK, appliedSettings);
                 finish();
             }
         });
@@ -175,16 +206,28 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setResult(RESULT_CANCELED);
                 finish();
             }
         });
     }
 
     private void setupCityListSpinner() {
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, R.layout.settings_spinner_item, weatherProvider.getCitiesList());
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, R.layout.settings_spinner_item, weatherProvider.getCitiesList());
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         citySpinner.setAdapter(arrayAdapter);
         citySpinner.setSelection(arrayAdapter.getPosition(settings.getCity()));
+        citySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                settings.setCity(adapterView.getItemAtPosition(i).toString());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
     private void findViews() {
@@ -197,64 +240,17 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         temperatureUnit = findViewById(R.id.temperatureUnit);
     }
 
-}
-
-class WeatherSettingsActivityCurrentStatus implements Serializable {
-    private String city;
-    private boolean useFahrenheitTempUnit;
-    private boolean showWindSpeed;
-    private boolean showPressure;
-    private boolean showFeelsLike;
-
-    public WeatherSettingsActivityCurrentStatus() {
-        this("Paris", false, false, false, false);
-    }
-
-    public WeatherSettingsActivityCurrentStatus(String city, boolean useFahrenheitTempUnit, boolean showWindSpeed, boolean showPressure, boolean showFeelsLike) {
-        this.city = city;
-        this.useFahrenheitTempUnit = useFahrenheitTempUnit;
-        this.showWindSpeed = showWindSpeed;
-        this.showPressure = showPressure;
-        this.showFeelsLike = showFeelsLike;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public boolean isFahrenheitTempUnit() {
-        return useFahrenheitTempUnit;
-    }
-
-    public boolean isShowWindSpeed() {
-        return showWindSpeed;
-    }
-
-    public boolean isShowPressure() {
-        return showPressure;
-    }
-
-    public boolean isShowFeelsLike() {
-        return showFeelsLike;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public void setTemperatureUnit(boolean useFahrenheitTempUnit) {
-        this.useFahrenheitTempUnit = useFahrenheitTempUnit;
-    }
-
-    public void setShowWindSpeed(boolean showWindSpeed) {
-        this.showWindSpeed = showWindSpeed;
-    }
-
-    public void setShowPressure(boolean showPressure) {
-        this.showPressure = showPressure;
-    }
-
-    public void setShowFeelsLike(boolean showFeelsLike) {
-        this.showFeelsLike = showFeelsLike;
+    /**
+     * Debug purposes
+     * @param textToPrint debug text to print
+     */
+    private void onDebug(String textToPrint) {
+        if ( debug ) {
+            String weatherSettingsActivityTAG = "WeatherSettingsActivity";
+            Log.d(weatherSettingsActivityTAG, textToPrint);
+            Toast.makeText(getApplicationContext(), textToPrint, Toast.LENGTH_SHORT).show();
+        }
     }
 }
+
+

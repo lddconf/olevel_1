@@ -1,12 +1,14 @@
 package com.example.weather;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,7 +16,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -30,16 +31,19 @@ public class MainActivity extends AppCompatActivity {
     private TextView temperatureView;
     private TextView feelsLikeView;
     private TextView cloudinessView;
+    private TextView windView;
+    private TextView pressureView;
     private ImageView weatherView;
     private ImageView settingsViewButton;
 
     private MainActivitySettings settings;
 
-    private final String mainActivitySettingsKey = "AppMainActivitySettings";
-    private final String mainActivityTAG = "MainActivity";
+    private static final String mainActivitySettingsKey = "AppMainActivitySettings";
+    static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
+    private static final int settingsChangedRequestCode = 0x1;
+    private static final boolean debug = false;
 
     private BroadcastReceiver dateTimeChangedReceiver;
-
 
     /**
      * Activity on create stuff
@@ -52,36 +56,32 @@ public class MainActivity extends AppCompatActivity {
         settings = new MainActivitySettings();
 
         findViews();
-        updateLocation();
-        updateTemp();
-        updateFeelsLikeTempView();
-        updateCloudinessView();
-        updateWeatherView();
-        setupSettingsView();
+        updateViews();
 
-        Log.d(mainActivityTAG, "onCreate");
-        Toast.makeText(getApplicationContext(), "onCreate", Toast.LENGTH_SHORT).show();
+        setupSettingsView();
+        setupCityView();
+        setupDateTimeViewOnClick();
+        setupTemperatureViewOnClick();
+
+        onDebug("onCreate");
     }
 
     @Override
     protected void onDestroy() {
-        Log.d(mainActivityTAG, "onDestroy");
-        Toast.makeText(getApplicationContext(), "onDestroy", Toast.LENGTH_SHORT).show();
+        onDebug("onDestroy");
         super.onDestroy();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d(mainActivityTAG, "onStart");
-        Toast.makeText(getApplicationContext(), "onStart", Toast.LENGTH_SHORT).show();
+        onDebug("onStart");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(mainActivityTAG, "onStop");
-        Toast.makeText(getApplicationContext(), "onStop", Toast.LENGTH_SHORT).show();
+        onDebug("onStop");
     }
 
     /**
@@ -91,10 +91,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putSerializable(mainActivitySettingsKey, settings);
-        Log.d(mainActivityTAG, "onSaveInstanceState");
-        Toast.makeText(getApplicationContext(), "onSaveInstanceState", Toast.LENGTH_SHORT).show();
-
+        onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
+    }
+
+    /**
+     * Update all changeable views
+     */
+    private void updateViews() {
+        updateLocation();
+        updateTemp();
+        updateFeelsLikeTempView();
+        updateCloudinessView();
+        updateWeatherView();
+        updateWindView();
+        updatePressureView();
     }
 
     /**
@@ -108,17 +119,13 @@ public class MainActivity extends AppCompatActivity {
             MainActivitySettings savedSettings = (MainActivitySettings)savedInstanceState.getSerializable(mainActivitySettingsKey);
             if ( savedSettings != null ) {
                 settings = savedSettings;
-                updateLocation();
-                updateTemp();
-                updateFeelsLikeTempView();
-                updateCloudinessView();
-                updateWeatherView();
+                updateViews();
             }
         } catch (ClassCastException e) {
             e.printStackTrace();
         }
-        Log.d(mainActivityTAG, "onRestoreInstanceState");
-        Toast.makeText(getApplicationContext(), "onRestoreInstanceState", Toast.LENGTH_SHORT).show();
+
+        onDebug("onRestoreInstanceState");
     }
 
     /**
@@ -128,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         disableDateTimeUpdate();
-        Log.d(mainActivityTAG, "onPause");
-        Toast.makeText(getApplicationContext(), "onPause", Toast.LENGTH_SHORT).show();
+
+        onDebug("onPause");
     }
 
     /**
@@ -139,21 +146,72 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         initDateTimeUpdate();
-        Log.d(mainActivityTAG, "onResume");
-        Toast.makeText(getApplicationContext(), "onResume", Toast.LENGTH_SHORT).show();
+        onDebug("onResume");
     }
 
+    /**
+     * Setup settings view button
+     */
     private void setupSettingsView() {
         settingsViewButton.setImageResource(R.mipmap.ic_settings);
         settingsViewButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
-                startActivity(settingsActivity);
+                settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(settings));
+                startActivityForResult(settingsActivity, settingsChangedRequestCode);
             }
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if ( data == null ) {
+            return;
+        }
+        //Apply new settings
+        if ( requestCode == settingsChangedRequestCode && resultCode == RESULT_OK ) {
+            WeatherSettingsActivityCurrentStatus newViewSettings;
+            newViewSettings = (WeatherSettingsActivityCurrentStatus)data.getSerializableExtra(mainActivityViewOptionsKey);
+            assert newViewSettings != null;
+            settings.setCity(newViewSettings.getCity());
+            settings.setUseCelsiusUnit(!newViewSettings.isFahrenheitTempUnit());
+            settings.setShowFeelsLike(newViewSettings.isShowFeelsLike());
+            settings.setShowWind(newViewSettings.isShowWindSpeed());
+            settings.setShowPressure(newViewSettings.isShowPressure());
+            updateViews();
+        }
+    }
+
+    /**
+     * Setup On this day history
+     */
+    private void setupDateTimeViewOnClick() {
+        dateTimeView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Date currentDate = Calendar.getInstance().getTime();
+                SimpleDateFormat df = new SimpleDateFormat("MMMM/d", Locale.getDefault());
+                String url = getString(R.string.on_this_day) + df.format(currentDate).toLowerCase();
+                Uri uri = Uri.parse(url);
+                Intent onThisDayBrowser = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(onThisDayBrowser);
+            }
+        });
+    }
+
+    private void setupTemperatureViewOnClick() {
+        temperatureView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String url = String.format(getString(R.string.weather_yandex), settings.getCity());
+                Uri uri = Uri.parse(url.toLowerCase());
+                Intent weatherBrowser = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(weatherBrowser);
+            }
+        });
+    }
     /**
      * Enable auto update date-time view
      */
@@ -180,6 +238,16 @@ public class MainActivity extends AppCompatActivity {
        unregisterReceiver(dateTimeChangedReceiver);
     }
 
+    private void setupCityView() {
+        cityView.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Uri uri = Uri.parse(getString(R.string.city_about) + settings.getCity());
+                Intent cityDetailsBrowser = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(cityDetailsBrowser);
+            }
+        });
+    }
     /**
      * Update location view
      */
@@ -187,12 +255,14 @@ public class MainActivity extends AppCompatActivity {
         cityView.setText(settings.getCity());
     }
 
+
+
     /**
      * Update date-time status view
      */
     private void updateDate() {
         Date currentDate = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("E, dd MMM HH:mm", Locale.getDefault());
+        SimpleDateFormat df = new SimpleDateFormat(getString(R.string.date_format), Locale.getDefault());
         String dateTime = df.format(currentDate);
         dateTimeView.setText(dateTime);
     }
@@ -201,7 +271,12 @@ public class MainActivity extends AppCompatActivity {
      * Update temperature value in view
      */
     private void updateTemp() {
-        String currentTemperature = settings.getTemperature() + settings.getTempUnit();
+        String currentTemperature = Integer.toString(settings.getTemperature());
+        if ( settings.useCelsiusUnit() ) {
+            currentTemperature += getString(R.string.temp_unit_celsius);
+        } else {
+            currentTemperature += getString(R.string.temp_unit_fahrenheit);
+        }
         temperatureView.setText(currentTemperature);
     }
 
@@ -209,7 +284,34 @@ public class MainActivity extends AppCompatActivity {
      * Update weather feels like status
      */
     private void updateFeelsLikeTempView() {
-        feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLike(), settings.getTempUnit()));
+        if ( settings.isShowFeelsLike() ) {
+            feelsLikeView.setVisibility(View.VISIBLE);
+            String tempUnit = getString(R.string.temp_unit_celsius);
+            if ( !settings.useCelsiusUnit() ) {
+                tempUnit = getString(R.string.temp_unit_fahrenheit);
+            }
+            feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLikeTemp(), tempUnit));
+        } else {
+            feelsLikeView.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateWindView() {
+        if (settings.isShowWind()) {
+            windView.setVisibility(View.VISIBLE);
+            windView.setText(String.format(Locale.getDefault(), "%.1f m/s", settings.getWindSpeed()));
+        } else {
+            windView.setVisibility(View.GONE);
+        }
+    }
+
+    private void updatePressureView() {
+        if (settings.isShowPressure()) {
+            pressureView.setVisibility(View.VISIBLE);
+            pressureView.setText(String.format(Locale.getDefault(),"%d mm", settings.getPressureBar()));
+        } else {
+            pressureView.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -229,6 +331,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Debug purposes
+     * @param textToPrint - some debug text
+     */
+    private void onDebug(String textToPrint) {
+        if ( debug ) {
+            String mainActivityTAG = "MainActivity";
+            Log.d(mainActivityTAG, textToPrint);
+            Toast.makeText(getApplicationContext(), textToPrint, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
      * Find activity views
      */
     private void findViews() {
@@ -239,67 +353,9 @@ public class MainActivity extends AppCompatActivity {
         weatherView = findViewById( R.id.imageView);
         cloudinessView = findViewById( R.id.cloudinessView);
         settingsViewButton = findViewById(R.id.settingsButton);
+        windView = findViewById(R.id.windView);
+        pressureView = findViewById(R.id.pressureView);
     }
+
 }
 
-/**
- * Simple class for main activity settings
- */
-class MainActivitySettings implements Serializable {
-    private int temperature;
-    private int feelsLike;
-    private String cloudiness;
-    private String city;
-    private String tempUnit;
-
-    /**
-     * Default constructor for serializable/deserializable objects
-     */
-    public MainActivitySettings() {
-        temperature = (int)(Math.random() * 40);
-        feelsLike = (int)(Math.random() * 40);
-        city = "Moscow";
-        cloudiness = "cloudy";
-        tempUnit = "\u2103";
-    }
-
-    /**
-     * Get current temperature
-     * @return current temperature
-     */
-    public int getTemperature() {
-        return temperature;
-    }
-
-    /**
-     * Get current feels like temperature
-     * @return feels like temperature
-     */
-    public int getFeelsLike() {
-        return feelsLike;
-    }
-
-    /**
-     * Get current cloudiness status
-     * @return cloudiness status string
-     */
-    public String getCloudiness() {
-        return cloudiness;
-    }
-
-    /**
-     * Get current city
-     * @return current city
-     */
-    public String getCity() {
-        return city;
-    }
-
-    /**
-     * Get current temperature display unit
-     * @return current temperature unit
-     */
-    public String getTempUnit() {
-        return tempUnit;
-    }
-}
