@@ -12,6 +12,8 @@
         <activity
             android:name=".WeatherSettingsActivity"
             android:label="@string/title_activity_weather_settings" />
+        <activity android:name=".weather.WeatherDisplayActivity"
+            android:label="@string/title_activity_weather_settings" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

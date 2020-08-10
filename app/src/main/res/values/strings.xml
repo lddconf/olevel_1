@@ -43,5 +43,6 @@
     <string name="settings_label">Settings</string>
     <string name="weather_settings_title">Weather Settings</string>
     <string name="dnt_save_close_label">Don\'t save and close</string>
+    <string name="locate_label">Locate</string>
 
 </resources>

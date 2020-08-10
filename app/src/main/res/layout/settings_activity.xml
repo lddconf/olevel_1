@@ -23,6 +23,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:orientation="horizontal" >
                 <TextView
                     android:id="@+id/cityView"
@@ -42,50 +43,11 @@
                     android:layout_marginEnd="10dp"
                 />
             </LinearLayout>
-            <Switch
-                android:id="@+id/enableWindView"
+
+            <FrameLayout
+                android:id="@+id/fragment_container"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="10dp"
-                android:paddingVertical="10dp"
-                android:text="@string/show_wind_speed"
-                android:textSize="25sp"
-            />
-            <Switch
-                android:id="@+id/enablePressure"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:paddingVertical="10dp"
-                android:text="@string/show_pressure"
-                android:textSize="25sp"
-            />
-            <Switch
-                android:id="@+id/enableFeelsLike"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:paddingVertical="10dp"
-                android:text="@string/show_feels_like_string"
-                android:textSize="25sp"
-            />
-            <Switch
-                android:id="@+id/temperatureUnit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:paddingVertical="10dp"
-                android:text="@string/temperature_unit_title"
-                android:textSize="25sp"
-                />
+                android:layout_height="match_parent" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
