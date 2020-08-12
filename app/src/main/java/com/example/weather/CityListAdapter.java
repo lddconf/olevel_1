@@ -93,7 +93,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
 
         private void findViews(View view) {
             cityNameView = view.findViewById(R.id.cityName);
-            briefTempView = view.findViewById(R.id.breafTemp);
+            briefTempView = view.findViewById(R.id.briefTemp);
         }
     }
 

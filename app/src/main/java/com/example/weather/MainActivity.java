@@ -60,10 +60,12 @@ public class MainActivity extends AppCompatActivity {
 
         prepareWeatherData();
         setupCityViewFragment();
-        updateCityViewFragment();
         setupActionBar();
+        updateCityViewFragment();
         onDebug("onCreate");
     }
+
+
 
     private void setupCityViewFragment() {
         //Setup city selection frame view
@@ -204,6 +206,9 @@ public class MainActivity extends AppCompatActivity {
             WeatherDisplayOptions savedOptions = (WeatherDisplayOptions)savedInstanceState.getSerializable(mainActivityViewOptionsKey);
             if ( savedOptions != null ) {
                 options = savedOptions;
+                for ( CityWeatherSettings w: mCityWeatherList ) {
+                    w.setWeatherDisplayOptions(options);
+                }
                 updateCityViewFragment();
             }
         } catch (ClassCastException e) {
@@ -228,6 +233,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         onDebug("onResume");
     }
 

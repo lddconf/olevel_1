@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 
+/**
+ * Simple weather provider. Generate random weather data for determined number of cities
+ */
 public class SimpleWeatherProvider implements WeatherProviderInterface {
     private LinkedHashMap<String, WeatherEntity> weathers;
 

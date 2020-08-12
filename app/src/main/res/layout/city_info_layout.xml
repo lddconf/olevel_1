@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingTop="1dp"
+    android:background="?attr/selectableItemBackground"
     android:paddingBottom="1dp"
     >
     <TextView
@@ -19,7 +20,7 @@
         android:layout_weight="3"
         />
     <TextView
-        android:id="@+id/breafTemp"
+        android:id="@+id/briefTemp"
         android:layout_width="0dp"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
