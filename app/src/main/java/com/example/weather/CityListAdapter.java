@@ -74,16 +74,27 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             cityNameView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (checkedPosition != getAdapterPosition()) {
-                            notifyItemChanged(checkedPosition); //For uncheck previous
-                            checkedPosition = getAdapterPosition();
-                            notifyItemChanged(checkedPosition); //For uncheck previous
-                            if (onItemClickListener != null) {
-                                onItemClickListener.onItemClick(checkedPosition);
-                            }
-                        }
+                        handleOnItemClick();
                     }
                 });
+            briefTempView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    handleOnItemClick();
+                }
+            });
+
+        }
+
+        private void handleOnItemClick() {
+            if (checkedPosition != getAdapterPosition()) {
+                notifyItemChanged(checkedPosition); //For uncheck previous
+                checkedPosition = getAdapterPosition();
+                notifyItemChanged(checkedPosition); //For uncheck previous
+            }
+            if (onItemClickListener != null) {
+                onItemClickListener.onItemClick(checkedPosition);
+            }
         }
 
         private void findViews(View view) {
