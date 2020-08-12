@@ -45,20 +45,14 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
          * @param weatherSettings displayed weather settings
          */
         void bind( final CityWeatherSettings weatherSettings ) {
-            if ( checkedPosition == -1 ) {
-                cityNameView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
-                briefTempView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
-            } else {
-                if (checkedPosition == getAdapterPosition()) {
-                    if ( (mode & DISPLAY_SELECTION_MODE) > 0 ) {
-                        cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
-                        briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
-                    }
-                } else {
-                    cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
-                    briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
-                    //cityNameView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
+            if (checkedPosition == getAdapterPosition() && checkedPosition >= 0) {
+                if ( (mode & DISPLAY_SELECTION_MODE) > 0 ) {
+                    cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
+                    briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
                 }
+            } else {
+                cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
+                briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
             }
 
             cityNameView.setText(weatherSettings.getCurrentCity());
@@ -145,13 +139,18 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
     }
 
     public void setSelectedItemIndex(int index) {
-        notifyItemChanged(checkedPosition); //For uncheck previous
+        int lastCheckedPosition = checkedPosition;
         if (index >= 0 && index < getItemCount() ) {
             checkedPosition = index;
         } else {
             checkedPosition = -1;
         }
-        notifyItemChanged(checkedPosition); //For check new
+
+        notifyItemChanged(lastCheckedPosition); //For uncheck previous
+
+        if ( checkedPosition >= 0 ) {
+            notifyItemChanged(checkedPosition); //For check new
+        }
         onItemClickListener.onItemClick(checkedPosition);
     }
 
