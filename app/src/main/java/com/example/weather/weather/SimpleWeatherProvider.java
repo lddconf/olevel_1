@@ -2,8 +2,8 @@ package com.example.weather.weather;
 
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 
 /**
@@ -34,5 +34,17 @@ public class SimpleWeatherProvider implements WeatherProviderInterface {
         return weathers.get(city);
     }
 
-
+    @Nullable
+    @Override
+    public ArrayList<WeatherEntity> getWeatherForecast23For(String city) {
+        WeatherEntity w = weathers.get(city);
+        if ( w != null ) {
+            ArrayList<WeatherEntity> result = new ArrayList<>(23);
+            for (int i = 0; i < 24; i++) {
+                result.add(new WeatherEntity());
+            }
+            return result;
+        }
+        return null;
+    }
 }

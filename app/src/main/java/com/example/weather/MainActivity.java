@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptions;
@@ -30,9 +29,6 @@ import java.util.Objects;
  * Main Weather Info Activity
  */
 public class MainActivity extends AppCompatActivity {
-
-    private TextView cityView;
-
     private Toolbar mainToolBar;
     private WeatherDisplayOptions options;
     private ArrayList<CityWeatherSettings> mCityWeatherList;
@@ -114,7 +110,9 @@ public class MainActivity extends AppCompatActivity {
         String[] cities = weatherProvider.getCitiesList();
         mCityWeatherList = new ArrayList<>(cities.length);
         for ( String city: cities ) {
-            mCityWeatherList.add(new CityWeatherSettings(city, weatherProvider.getWeatherFor(city), options));
+            CityWeatherSettings cs = new CityWeatherSettings(city, weatherProvider.getWeatherFor(city), options);
+            cs.addHourlyForecastWeather(weatherProvider.getWeatherForecast23For(city));
+            mCityWeatherList.add( cs );
         }
     }
 
@@ -283,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
      * Find activity views
      */
     private void findViews() {
-        citySelectionFragment = (CitySelectionFragment)(getSupportFragmentManager().findFragmentById(R.id.city_list_fragmet));
+        citySelectionFragment = (CitySelectionFragment)(getSupportFragmentManager().findFragmentById(R.id.city_list_fragment));
         mainToolBar = findViewById(R.id.mainToolbar);
     }
 

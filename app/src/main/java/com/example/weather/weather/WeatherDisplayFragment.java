@@ -15,11 +15,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weather.R;
-import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.text.SimpleDateFormat;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -34,6 +36,8 @@ public class WeatherDisplayFragment extends Fragment {
     private ImageView weatherView;
     private CityWeatherSettings settings;
     private BroadcastReceiver dateTimeChangedReceiver;
+
+    private RecyclerView weatherHourlyDetails;
 
     public static final String WeatherDisplayOptionsKey = "DisplayOptionsKey";
 
@@ -66,6 +70,7 @@ public class WeatherDisplayFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         setupDateTimeViewOnClick();
         setupTemperatureViewOnClick();
+        setupWeatherHourlyList();
         updateViews();
     }
 
@@ -84,14 +89,6 @@ public class WeatherDisplayFragment extends Fragment {
      */
     public void setWeather(@NonNull WeatherEntity weather) {
         settings.setWeather(weather);
-        updateViews();
-    }
-
-    /**
-     * Apply new display settings
-     */
-    public void setWeatherDisplayOptions(@NonNull WeatherDisplayOptions options) {
-        settings.setWeatherDisplayOptions(options);
         updateViews();
     }
 
@@ -121,7 +118,20 @@ public class WeatherDisplayFragment extends Fragment {
         cloudinessView = view.findViewById( R.id.cloudinessView);
         windView = view.findViewById(R.id.windView);
         pressureView = view.findViewById(R.id.pressureView);
+
+        weatherHourlyDetails = view.findViewById(R.id.weather_hourly_details);
     }
+
+    /**
+     * Setup weathers hourly list
+     */
+    private void setupWeatherHourlyList() {
+        RecyclerView.LayoutManager lm = new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false);
+        weatherHourlyDetails.setLayoutManager(lm);
+        WHourDetailsAdapter wHAdapter = new WHourDetailsAdapter(settings.getHourlyForecast(), Calendar.getInstance().get(Calendar.HOUR));
+        weatherHourlyDetails.setAdapter(wHAdapter);
+    }
+
 
     /**
      * Update date-time status view
@@ -209,7 +219,7 @@ public class WeatherDisplayFragment extends Fragment {
      * Update Weather status image
      */
     private void updateWeatherView() {
-        if ( settings.getWeather().getCloudiness().equals(getString(R.string.cloudy))) {
+        if ( settings.getWeather().getCloudiness().equals(requireContext().getString(R.string.cloudy))) {
             weatherView.setImageResource(R.mipmap.ic_cloudly);
         }
     }

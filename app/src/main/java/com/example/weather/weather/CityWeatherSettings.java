@@ -5,10 +5,13 @@ import androidx.annotation.NonNull;
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class CityWeatherSettings implements Serializable {
     private WeatherEntity currentWeather;
     private String currentCity;
+
+    private ArrayList<WeatherEntity> hourlyForecast;
 
     private WeatherDisplayOptions displayOptions;
 
@@ -23,6 +26,11 @@ public class CityWeatherSettings implements Serializable {
     public CityWeatherSettings(String city, WeatherEntity weather, WeatherDisplayOptions options) {
         this.currentCity = city;
         this.currentWeather = weather;
+        hourlyForecast = new ArrayList<>(24);
+        for (int i = 0; i < 24; i++) {
+            hourlyForecast.add( new WeatherEntity());
+        }
+
         setWeatherDisplayOptions(options);
     }
 
@@ -57,6 +65,32 @@ public class CityWeatherSettings implements Serializable {
     public void setWeatherDisplayOptions(@NonNull WeatherDisplayOptions options) {
         displayOptions = options;
         setWeather(currentWeather);
+        applyHourlyForecastOptions();
+    }
+
+    /**
+     * Add hourly forecast options
+     * @param hourlyForecast new forecast options
+     */
+    public void addHourlyForecastWeather( ArrayList<WeatherEntity>  hourlyForecast) {
+        this.hourlyForecast = hourlyForecast;
+        applyHourlyForecastOptions();
+    }
+
+    /**
+     * Get hourly forecast weather
+     * @return hourly forecast weather
+     */
+    ArrayList<WeatherEntity> getHourlyForecast() {
+        return hourlyForecast;
+    }
+    /**
+     * Apply weather settings
+     */
+    private void applyHourlyForecastOptions() {
+        for (int i = 0; i < hourlyForecast.size(); i++) {
+            hourlyForecast.set(i, formatWeatherWithOptions(hourlyForecast.get(i), displayOptions));
+        }
     }
 
     /**
@@ -73,16 +107,22 @@ public class CityWeatherSettings implements Serializable {
      * @param entity - new weather entity
      */
     public void setWeather(@NonNull WeatherEntity entity ) {
-        if ( displayOptions.isFahrenheitTempUnit() == entity.isFahrenheitTempUnit() ) {
-            currentWeather = entity;
+        currentWeather = formatWeatherWithOptions(entity, displayOptions);
+    }
+
+    private WeatherEntity formatWeatherWithOptions(@NonNull WeatherEntity entity, @NonNull WeatherDisplayOptions options) {
+        if ( options.isFahrenheitTempUnit() == entity.isFahrenheitTempUnit() ) {
+            return entity;
         } else {
+            WeatherEntity newWeather;
             //In fahrenheit. Need in celsius
-            if ( entity.isFahrenheitTempUnit() && (!displayOptions.isFahrenheitTempUnit())) {
-                currentWeather = entity.toCelsiusUnits();
+            if ( entity.isFahrenheitTempUnit() && (!options.isFahrenheitTempUnit())) {
+                newWeather = entity.toCelsiusUnits();
             } else {
                 //From celsius to fahrenheit
-                currentWeather = entity.toFahrenheitUnits();
+                newWeather = entity.toFahrenheitUnits();
             }
+            return newWeather;
         }
     }
 }

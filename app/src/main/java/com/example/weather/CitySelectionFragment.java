@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 
 public class CitySelectionFragment extends Fragment {
     private RecyclerView cityList;
+
     private CityListAdapter adapter;
     private ArrayList<CityWeatherSettings> weatherSettingsArrayList;
 
@@ -48,6 +48,8 @@ public class CitySelectionFragment extends Fragment {
     private void findViews(View view) {
         cityList = view.findViewById(R.id.city_list);
     }
+
+
 
     /**
      * Setup item selected callback. Previous will be erased
