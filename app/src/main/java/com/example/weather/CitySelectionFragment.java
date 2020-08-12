@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,7 +37,8 @@ public class CitySelectionFragment extends Fragment {
     }
 
     private void setupCityList() {
-        RecyclerView.LayoutManager layout = new LinearLayoutManager(getContext());
+        cityList.setHasFixedSize(true);
+        RecyclerView.LayoutManager layout = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         cityList.setLayoutManager(layout);
         adapter = new CityListAdapter(getContext(), weatherSettingsArrayList,
                 CityListAdapter.DISPLAY_TEMP_MODE | CityListAdapter.DISPLAY_SELECTION_MODE);
@@ -51,7 +53,7 @@ public class CitySelectionFragment extends Fragment {
      * Setup item selected callback. Previous will be erased
      * @param callBack new callback class
      */
-    public void setOnItemSelectedCallBack( ItemSelectedCallBack callBack) {
+    public void setOnItemSelectedCallBack( OnItemClickListener callBack) {
         adapter.setOnItemSelectedCallBack(callBack);
     }
 
@@ -72,6 +74,7 @@ public class CitySelectionFragment extends Fragment {
      * @param index selected index
      */
     public void setItemSelected(int index) {
+
         if ( index >= 0 ) {
             cityList.scrollToPosition(index);
         }

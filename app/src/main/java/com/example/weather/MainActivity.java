@@ -70,9 +70,9 @@ public class MainActivity extends AppCompatActivity {
         citySelectionFragment.displayTemperature(verticalMode);
         citySelectionFragment.enableSelection(!verticalMode);
 
-        citySelectionFragment.setOnItemSelectedCallBack(new ItemSelectedCallBack() {
+        citySelectionFragment.setOnItemSelectedCallBack(new OnItemClickListener() {
             @Override
-            public void itemSelected(int index) {
+            public void onItemClick(int index) {
                 selectedIndex = index;
 
                 if ( selectedIndex < 0 | selectedIndex > mCityWeatherList.size() ) return;

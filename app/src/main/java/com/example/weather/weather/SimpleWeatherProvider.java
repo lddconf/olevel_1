@@ -4,12 +4,13 @@ import androidx.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 
 public class SimpleWeatherProvider implements WeatherProviderInterface {
-    private Hashtable<String, WeatherEntity> weathers;
+    private LinkedHashMap<String, WeatherEntity> weathers;
 
     public SimpleWeatherProvider() {
-        weathers = new Hashtable<>();
+        weathers = new LinkedHashMap<>();
         String[] cities = new String[] {"Moscow", "New York", "Berlin", "Paris", "Prague", "Minsk"};
         Arrays.sort(cities);
 
@@ -21,8 +22,7 @@ public class SimpleWeatherProvider implements WeatherProviderInterface {
     @Override
     public String[] getCitiesList() {
         String[] cities = new String[weathers.keySet().size()];
-        weathers.keySet().toArray(cities);
-        return cities;
+        return weathers.keySet().toArray(cities);
     }
 
     @Override

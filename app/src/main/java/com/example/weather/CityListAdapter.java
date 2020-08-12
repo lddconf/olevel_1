@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityViewHolder> {
     private Context context;
     private ArrayList<CityWeatherSettings> mWeatherSet;
-    private ItemSelectedCallBack itemSelectedCallBack;
+    private OnItemClickListener onItemClickListener;
     private int checkedPosition = -1;
     private int viewMode;
 
@@ -28,7 +28,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
      */
     public class CityViewHolder extends RecyclerView.ViewHolder {
         private TextView cityNameView;
-        private TextView breafTempView;
+        private TextView briefTempView;
         private int mode;
 
         public CityViewHolder(View view, int mode) {
@@ -36,7 +36,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             this.mode = mode;
             findViews(view);
             if ( (mode & DISPLAY_TEMP_MODE) == 0 ) {
-                breafTempView.setVisibility(View.GONE);
+                briefTempView.setVisibility(View.GONE);
             }
         }
 
@@ -47,16 +47,16 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         void bind( final CityWeatherSettings weatherSettings ) {
             if ( checkedPosition == -1 ) {
                 cityNameView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
-                breafTempView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
+                briefTempView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
             } else {
                 if (checkedPosition == getAdapterPosition()) {
                     if ( (mode & DISPLAY_SELECTION_MODE) > 0 ) {
                         cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
-                        breafTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
+                        briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
                     }
                 } else {
                     cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
-                    breafTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
+                    briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
                     //cityNameView.setTextColor(ContextCompat.getColor(context, R.color.colorText));
                 }
             }
@@ -69,24 +69,26 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             } else {
                 tempUnit += context.getString(R.string.temp_unit_celsius);
             }
-            breafTempView.setText(tempUnit);
+            briefTempView.setText(tempUnit);
 
             cityNameView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                if ( checkedPosition != getAdapterPosition() ) {
-                    notifyItemChanged(checkedPosition); //For uncheck previous
-                    checkedPosition = getAdapterPosition();
-                    notifyItemChanged(checkedPosition); //For uncheck previous
-                    itemSelectedCallBack.itemSelected(checkedPosition);
+                        if (checkedPosition != getAdapterPosition()) {
+                            notifyItemChanged(checkedPosition); //For uncheck previous
+                            checkedPosition = getAdapterPosition();
+                            notifyItemChanged(checkedPosition); //For uncheck previous
+                            if (onItemClickListener != null) {
+                                onItemClickListener.onItemClick(checkedPosition);
+                            }
+                        }
                     }
-                 }
                 });
         }
 
         private void findViews(View view) {
             cityNameView = view.findViewById(R.id.cityName);
-            breafTempView = view.findViewById(R.id.breafTemp);
+            briefTempView = view.findViewById(R.id.breafTemp);
         }
     }
 
@@ -98,9 +100,9 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         this.context = context;
         this.mWeatherSet = mWeatherSet;
         this.viewMode = mode;
-        itemSelectedCallBack = new ItemSelectedCallBack() {
+        onItemClickListener = new OnItemClickListener() {
             @Override
-            public void itemSelected(int id) {
+            public void onItemClick(int id) {
                 //Nothing to do
             }
         };
@@ -110,8 +112,8 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
      * Setup item selected callback. Previous will be erased
      * @param callBack new callback class
      */
-    public void setOnItemSelectedCallBack( ItemSelectedCallBack callBack) {
-        itemSelectedCallBack = callBack;
+    public void setOnItemSelectedCallBack( OnItemClickListener callBack) {
+        onItemClickListener = callBack;
     }
 
     /**
@@ -139,7 +141,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             checkedPosition = -1;
         }
         notifyItemChanged(checkedPosition); //For check new
-        itemSelectedCallBack.itemSelected(checkedPosition);
+        onItemClickListener.onItemClick(checkedPosition);
     }
 
     /**
