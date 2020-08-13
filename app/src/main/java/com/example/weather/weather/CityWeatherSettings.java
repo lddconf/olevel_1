@@ -11,7 +11,7 @@ public class CityWeatherSettings implements Serializable {
     private WeatherEntity currentWeather;
     private String currentCity;
 
-    private ArrayList<WeatherEntity> hourlyForecast;
+    private ArrayList<WeatherEntity> weekForecast;
 
     private WeatherDisplayOptions displayOptions;
 
@@ -26,9 +26,9 @@ public class CityWeatherSettings implements Serializable {
     public CityWeatherSettings(String city, WeatherEntity weather, WeatherDisplayOptions options) {
         this.currentCity = city;
         this.currentWeather = weather;
-        hourlyForecast = new ArrayList<>(24);
-        for (int i = 0; i < 24; i++) {
-            hourlyForecast.add( new WeatherEntity());
+        weekForecast = new ArrayList<>(14);
+        for (int i = 0; i < 14; i++) {
+            weekForecast.add( new WeatherEntity());
         }
 
         setWeatherDisplayOptions(options);
@@ -65,31 +65,31 @@ public class CityWeatherSettings implements Serializable {
     public void setWeatherDisplayOptions(@NonNull WeatherDisplayOptions options) {
         displayOptions = options;
         setWeather(currentWeather);
-        applyHourlyForecastOptions();
+        applyWeekForecastOptions();
     }
 
     /**
      * Add hourly forecast options
      * @param hourlyForecast new forecast options
      */
-    public void addHourlyForecastWeather( ArrayList<WeatherEntity>  hourlyForecast) {
-        this.hourlyForecast = hourlyForecast;
-        applyHourlyForecastOptions();
+    public void addWeekForecastWeather(ArrayList<WeatherEntity>  hourlyForecast) {
+        this.weekForecast = hourlyForecast;
+        applyWeekForecastOptions();
     }
 
     /**
      * Get hourly forecast weather
      * @return hourly forecast weather
      */
-    ArrayList<WeatherEntity> getHourlyForecast() {
-        return hourlyForecast;
+    ArrayList<WeatherEntity> getWeekForecast() {
+        return weekForecast;
     }
     /**
      * Apply weather settings
      */
-    private void applyHourlyForecastOptions() {
-        for (int i = 0; i < hourlyForecast.size(); i++) {
-            hourlyForecast.set(i, formatWeatherWithOptions(hourlyForecast.get(i), displayOptions));
+    private void applyWeekForecastOptions() {
+        for (int i = 0; i < weekForecast.size(); i++) {
+            weekForecast.set(i, formatWeatherWithOptions(weekForecast.get(i), displayOptions));
         }
     }
 

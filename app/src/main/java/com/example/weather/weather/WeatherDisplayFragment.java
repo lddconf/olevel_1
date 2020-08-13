@@ -14,7 +14,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class WeatherDisplayFragment extends Fragment {
     private TextView dateTimeView;
@@ -37,7 +40,7 @@ public class WeatherDisplayFragment extends Fragment {
     private CityWeatherSettings settings;
     private BroadcastReceiver dateTimeChangedReceiver;
 
-    private RecyclerView weatherHourlyDetails;
+    private RecyclerView weatherWeekDetails;
 
     public static final String WeatherDisplayOptionsKey = "DisplayOptionsKey";
 
@@ -70,7 +73,7 @@ public class WeatherDisplayFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         setupDateTimeViewOnClick();
         setupTemperatureViewOnClick();
-        setupWeatherHourlyList();
+        setupWeatherWeekList();
         updateViews();
     }
 
@@ -119,17 +122,22 @@ public class WeatherDisplayFragment extends Fragment {
         windView = view.findViewById(R.id.windView);
         pressureView = view.findViewById(R.id.pressureView);
 
-        weatherHourlyDetails = view.findViewById(R.id.weather_hourly_details);
+        weatherWeekDetails = view.findViewById(R.id.weather_week_details);
     }
 
     /**
      * Setup weathers hourly list
      */
-    private void setupWeatherHourlyList() {
+    private void setupWeatherWeekList() {
         RecyclerView.LayoutManager lm = new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false);
-        weatherHourlyDetails.setLayoutManager(lm);
-        WHourDetailsAdapter wHAdapter = new WHourDetailsAdapter(settings.getHourlyForecast(), Calendar.getInstance().get(Calendar.HOUR));
-        weatherHourlyDetails.setAdapter(wHAdapter);
+        weatherWeekDetails.setLayoutManager(lm);
+
+        DividerItemDecoration itemDecoration = new DividerItemDecoration(requireContext(),  LinearLayoutManager.HORIZONTAL);
+        itemDecoration.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(requireContext(),R.drawable.recycleview_separator)));
+        weatherWeekDetails.addItemDecoration(itemDecoration);
+
+        WeatherWeekDetailsAdapter wHAdapter = new WeatherWeekDetailsAdapter(settings.getWeekForecast());
+        weatherWeekDetails.setAdapter(wHAdapter);
     }
 
 

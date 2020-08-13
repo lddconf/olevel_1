@@ -1,5 +1,6 @@
 package com.example.weather;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,13 +8,16 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weather.weather.CityWeatherSettings;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class CitySelectionFragment extends Fragment {
     private RecyclerView cityList;
@@ -37,9 +41,17 @@ public class CitySelectionFragment extends Fragment {
     }
 
     private void setupCityList() {
+        Context context = requireContext();
+
         cityList.setHasFixedSize(true);
-        RecyclerView.LayoutManager layout = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        RecyclerView.LayoutManager layout = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         cityList.setLayoutManager(layout);
+
+
+        DividerItemDecoration itemDecoration = new DividerItemDecoration(context,  LinearLayoutManager.VERTICAL);
+        itemDecoration.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(context,R.drawable.recycleview_separator)));
+        cityList.addItemDecoration(itemDecoration);
+
         adapter = new CityListAdapter(getContext(), weatherSettingsArrayList,
                 CityListAdapter.DISPLAY_TEMP_MODE | CityListAdapter.DISPLAY_SELECTION_MODE);
         cityList.setAdapter(adapter);

@@ -9,7 +9,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/hourlyDetailsTime"
+        android:id="@+id/dayOfWeekDetailsName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:text="@string/hourly_time"
@@ -17,14 +17,14 @@
         android:layout_gravity="center"
     />
     <ImageView
-        android:id="@+id/hourlyDetailsCloudiness"
+        android:id="@+id/dayOfWeekDetailsCloudiness"
         android:layout_gravity="center"
         android:layout_marginTop="5dp"
         android:layout_width="30dp"
         android:layout_height="30dp"
      />
     <TextView
-        android:id="@+id/hourlyDetailsTemp"
+        android:id="@+id/dayOfWeekDetailsTemp"
         android:layout_marginTop="5sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

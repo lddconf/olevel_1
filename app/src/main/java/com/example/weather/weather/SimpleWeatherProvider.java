@@ -36,11 +36,11 @@ public class SimpleWeatherProvider implements WeatherProviderInterface {
 
     @Nullable
     @Override
-    public ArrayList<WeatherEntity> getWeatherForecast23For(String city) {
+    public ArrayList<WeatherEntity> getWeatherWeekForecastFor(String city) {
         WeatherEntity w = weathers.get(city);
         if ( w != null ) {
-            ArrayList<WeatherEntity> result = new ArrayList<>(23);
-            for (int i = 0; i < 24; i++) {
+            ArrayList<WeatherEntity> result = new ArrayList<>(14);
+            for (int i = 0; i < 14; i++) {
                 result.add(new WeatherEntity());
             }
             return result;

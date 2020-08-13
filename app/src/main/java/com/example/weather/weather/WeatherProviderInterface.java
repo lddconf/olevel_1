@@ -15,5 +15,5 @@ public interface WeatherProviderInterface {
     WeatherEntity getWeatherFor(String city);
 
     @Nullable
-    ArrayList<WeatherEntity> getWeatherForecast23For(String city);
+    ArrayList<WeatherEntity> getWeatherWeekForecastFor(String city);
 }

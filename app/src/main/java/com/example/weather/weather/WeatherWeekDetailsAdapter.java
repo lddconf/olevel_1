@@ -12,19 +12,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.weather.R;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Locale;
 
-public class WHourDetailsAdapter extends RecyclerView.Adapter<WHourDetailsAdapter.WHourDetailsViewHolder> {
+public class WeatherWeekDetailsAdapter extends RecyclerView.Adapter<WeatherWeekDetailsAdapter.WeatherWeekDetailsViewHolder> {
     private ArrayList<WeatherEntity> weatherForecast;
-    private int baseHour;
 
-    public class WHourDetailsViewHolder extends RecyclerView.ViewHolder {
+    public class WeatherWeekDetailsViewHolder extends RecyclerView.ViewHolder {
         private TextView hourView;
         private ImageView cloudiness;
         private TextView tempView;
         private View view;
 
-        public WHourDetailsViewHolder(@NonNull View itemView) {
+        public WeatherWeekDetailsViewHolder(@NonNull View itemView) {
             super(itemView);
             view = itemView;
             findViews(itemView);
@@ -32,14 +32,17 @@ public class WHourDetailsAdapter extends RecyclerView.Adapter<WHourDetailsAdapte
         }
 
         private void findViews(View view) {
-            hourView = view.findViewById(R.id.hourlyDetailsTime);
-            cloudiness = view.findViewById(R.id.hourlyDetailsCloudiness);
-            tempView = view.findViewById(R.id.hourlyDetailsTemp);
+            hourView = view.findViewById(R.id.dayOfWeekDetailsName);
+            cloudiness = view.findViewById(R.id.dayOfWeekDetailsCloudiness);
+            tempView = view.findViewById(R.id.dayOfWeekDetailsTemp);
         }
 
         protected void bind(int position) {
             WeatherEntity w = weatherForecast.get(position);
-            hourView.setText( String.format(Locale.getDefault(),"%02d:00", (baseHour+position)%24 ));
+            final Calendar cal = Calendar.getInstance(Locale.getDefault());
+            cal.add(Calendar.DATE, position + 1);
+            hourView.setText( cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault()) );
+
             if ( w.getCloudiness().equals(view.getContext().getString(R.string.cloudy))) {
                 cloudiness.setImageResource(R.mipmap.ic_cloudly);
             }
@@ -57,26 +60,24 @@ public class WHourDetailsAdapter extends RecyclerView.Adapter<WHourDetailsAdapte
         }
     }
 
-    public WHourDetailsAdapter(@NonNull ArrayList<WeatherEntity> weatherForecast, int baseHour) {
+    public WeatherWeekDetailsAdapter(@NonNull ArrayList<WeatherEntity> weatherForecast) {
         this.weatherForecast = weatherForecast;
-        this.baseHour = baseHour;
     }
 
-    public void setWeatherForecast(@NonNull ArrayList<WeatherEntity> weatherForecast, int baseHour) {
+    public void setWeatherForecast(@NonNull ArrayList<WeatherEntity> weatherForecast) {
         this.weatherForecast = weatherForecast;
-        this.baseHour = baseHour;
         notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public WHourDetailsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public WeatherWeekDetailsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.hourly_details_cell, parent, false);
-        return new WHourDetailsViewHolder(view);
+        return new WeatherWeekDetailsViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull WHourDetailsViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull WeatherWeekDetailsViewHolder holder, int position) {
         holder.bind(position);
     }
 

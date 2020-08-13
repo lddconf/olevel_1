@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         mCityWeatherList = new ArrayList<>(cities.length);
         for ( String city: cities ) {
             CityWeatherSettings cs = new CityWeatherSettings(city, weatherProvider.getWeatherFor(city), options);
-            cs.addHourlyForecastWeather(weatherProvider.getWeatherForecast23For(city));
+            cs.addWeekForecastWeather(weatherProvider.getWeatherWeekForecastFor(city));
             mCityWeatherList.add( cs );
         }
     }
