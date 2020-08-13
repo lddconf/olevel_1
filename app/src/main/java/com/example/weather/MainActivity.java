@@ -3,23 +3,28 @@ package com.example.weather;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.Uri;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
+import com.example.weather.diplayoption.WeatherDisplayOptions;
+import com.example.weather.weather.CityWeatherSettings;
+import com.example.weather.weather.SimpleWeatherProvider;
+import com.example.weather.weather.WeatherDisplayActivity;
+import com.example.weather.weather.WeatherDisplayFragment;
+
+import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * Main Weather Info Activity
@@ -27,24 +32,19 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private TextView cityView;
-    private TextView dateTimeView;
-    private TextView temperatureView;
-    private TextView feelsLikeView;
-    private TextView cloudinessView;
-    private TextView windView;
-    private TextView pressureView;
-    private ImageView weatherView;
-    private ImageView settingsViewButton;
 
-    private MainActivitySettings settings;
+    private Toolbar mainToolBar;
+    private WeatherDisplayOptions options;
+    private ArrayList<CityWeatherSettings> mCityWeatherList;
+    private int selectedIndex;
+    private CitySelectionFragment citySelectionFragment;
+    private boolean verticalMode;
 
-    private static final String mainActivitySettingsKey = "AppMainActivitySettings";
-    static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
+    private static final String mainActivitySelectedIndexKey = "AppMainActivitySelectedIndexKey";
+    public static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
     private static final int settingsChangedRequestCode = 0x1;
     private static final boolean debug = false;
-
-    private BroadcastReceiver dateTimeChangedReceiver;
-
+    private static SimpleWeatherProvider weatherProvider = new SimpleWeatherProvider();
     /**
      * Activity on create stuff
      * @param savedInstanceState - activity saved instance state
@@ -53,17 +53,67 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        settings = new MainActivitySettings();
-
+        options = new WeatherDisplayOptions();
         findViews();
-        updateViews();
 
-        setupSettingsView();
-        setupCityView();
-        setupDateTimeViewOnClick();
-        setupTemperatureViewOnClick();
+        verticalMode = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
 
+        prepareWeatherData();
+        setupCityViewFragment();
+        updateCityViewFragment();
+        setupActionBar();
         onDebug("onCreate");
+    }
+
+    private void setupCityViewFragment() {
+        //Setup city selection frame view
+        citySelectionFragment.displayTemperature(verticalMode);
+        citySelectionFragment.enableSelection(!verticalMode);
+
+        citySelectionFragment.setOnItemSelectedCallBack(new ItemSelectedCallBack() {
+            @Override
+            public void itemSelected(int index) {
+                selectedIndex = index;
+
+                if ( selectedIndex < 0 | selectedIndex > mCityWeatherList.size() ) return;
+
+                //Display new activity
+                if ( verticalMode ) {
+                    Intent newIntent = new Intent(getApplicationContext(), WeatherDisplayActivity.class);
+                    newIntent.putExtra(WeatherDisplayFragment.WeatherDisplayOptionsKey, mCityWeatherList.get(selectedIndex));
+                    startActivity(newIntent);
+                } else {
+                    WeatherDisplayFragment fragment = new WeatherDisplayFragment();
+                    Bundle newBundle = new Bundle();
+                    newBundle.putSerializable(WeatherDisplayFragment.WeatherDisplayOptionsKey, mCityWeatherList.get(selectedIndex));
+                    fragment.setArguments(newBundle);
+
+                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                    ft.replace(R.id.weatherViewFragment, fragment);
+                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+
+
+                    ft.addToBackStack("WS");
+                    ft.commit();
+                }
+            }
+        });
+    }
+
+    private void updateCityViewFragment() {
+        citySelectionFragment.setWeatherSettingsArray(mCityWeatherList);
+        if (!verticalMode) {
+            citySelectionFragment.setItemSelected(selectedIndex);
+        }
+    }
+
+    private void prepareWeatherData() {
+        selectedIndex = -1;
+        String[] cities = weatherProvider.getCitiesList();
+        mCityWeatherList = new ArrayList<>(cities.length);
+        for ( String city: cities ) {
+            mCityWeatherList.add(new CityWeatherSettings(city, weatherProvider.getWeatherFor(city), options));
+        }
     }
 
     @Override
@@ -85,27 +135,61 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Setup action bar
+     */
+    void setupActionBar() {
+        setSupportActionBar(mainToolBar);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        int countOfFragmentInManager = getSupportFragmentManager().getBackStackEntryCount();
+        if(countOfFragmentInManager > 0) {
+            getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+        selectedIndex = -1;
+        citySelectionFragment.setItemSelected(selectedIndex);
+    }
+
+    /**
+     * Add toolbar some menus
+     * @param menu - customizing menus of activity
+     * @return true if menu displayed
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    /**
+     * Process toolbar menus onclick action
+     * @param item item to processing
+     * @return true if item was processed
+     */
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.actionSettings) {
+            showSettings();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
      * Activity save instance state
      * @param outState - saved instance state
      */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putSerializable(mainActivitySettingsKey, settings);
+        outState.putSerializable(mainActivitySelectedIndexKey, selectedIndex);
+        outState.putSerializable(mainActivityViewOptionsKey, options);
         onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
-    }
-
-    /**
-     * Update all changeable views
-     */
-    private void updateViews() {
-        updateLocation();
-        updateTemp();
-        updateFeelsLikeTempView();
-        updateCloudinessView();
-        updateWeatherView();
-        updateWindView();
-        updatePressureView();
     }
 
     /**
@@ -116,10 +200,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         try {
-            MainActivitySettings savedSettings = (MainActivitySettings)savedInstanceState.getSerializable(mainActivitySettingsKey);
-            if ( savedSettings != null ) {
-                settings = savedSettings;
-                updateViews();
+            selectedIndex = savedInstanceState.getInt(mainActivitySelectedIndexKey);
+            WeatherDisplayOptions savedOptions = (WeatherDisplayOptions)savedInstanceState.getSerializable(mainActivityViewOptionsKey);
+            if ( savedOptions != null ) {
+                options = savedOptions;
+                updateCityViewFragment();
             }
         } catch (ClassCastException e) {
             e.printStackTrace();
@@ -134,8 +219,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        disableDateTimeUpdate();
-
         onDebug("onPause");
     }
 
@@ -145,23 +228,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        initDateTimeUpdate();
         onDebug("onResume");
     }
 
+
     /**
-     * Setup settings view button
+     * Dislay settings activity
      */
-    private void setupSettingsView() {
-        settingsViewButton.setImageResource(R.mipmap.ic_settings);
-        settingsViewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
-                settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(settings));
-                startActivityForResult(settingsActivity, settingsChangedRequestCode);
-            }
-        });
+    private void showSettings() {
+        Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
+        settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(citySelectionFragment.getSelectedCity(), options));
+        startActivityForResult(settingsActivity, settingsChangedRequestCode);
     }
 
     @Override
@@ -175,158 +252,12 @@ public class MainActivity extends AppCompatActivity {
             WeatherSettingsActivityCurrentStatus newViewSettings;
             newViewSettings = (WeatherSettingsActivityCurrentStatus)data.getSerializableExtra(mainActivityViewOptionsKey);
             assert newViewSettings != null;
-            settings.setCity(newViewSettings.getCity());
-            settings.setUseCelsiusUnit(!newViewSettings.isFahrenheitTempUnit());
-            settings.setShowFeelsLike(newViewSettings.isShowFeelsLike());
-            settings.setShowWind(newViewSettings.isShowWindSpeed());
-            settings.setShowPressure(newViewSettings.isShowPressure());
-            updateViews();
-        }
-    }
+            options = newViewSettings.getDisplayOptions();
 
-    /**
-     * Setup On this day history
-     */
-    private void setupDateTimeViewOnClick() {
-        dateTimeView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Date currentDate = Calendar.getInstance().getTime();
-                SimpleDateFormat df = new SimpleDateFormat("MMMM/d", Locale.getDefault());
-                String url = getString(R.string.on_this_day) + df.format(currentDate).toLowerCase();
-                Uri uri = Uri.parse(url);
-                Intent onThisDayBrowser = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(onThisDayBrowser);
+            for ( CityWeatherSettings w: mCityWeatherList ) {
+                w.setWeatherDisplayOptions(options);
             }
-        });
-    }
-
-    private void setupTemperatureViewOnClick() {
-        temperatureView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String url = String.format(getString(R.string.weather_yandex), settings.getCity());
-                Uri uri = Uri.parse(url.toLowerCase());
-                Intent weatherBrowser = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(weatherBrowser);
-            }
-        });
-    }
-    /**
-     * Enable auto update date-time view
-     */
-    private void initDateTimeUpdate() {
-        updateDate();
-        dateTimeChangedReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                updateDate();
-            }
-        };
-        IntentFilter dateTimeUpdateFilter = new IntentFilter();
-        dateTimeUpdateFilter.addAction(Intent.ACTION_TIME_CHANGED); //manually time set
-        dateTimeUpdateFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
-        dateTimeUpdateFilter.addAction(Intent.ACTION_DATE_CHANGED); //manually date set
-        dateTimeUpdateFilter.addAction(Intent.ACTION_TIME_TICK);    //every 1 minute
-        registerReceiver(dateTimeChangedReceiver, dateTimeUpdateFilter);
-    }
-
-    /**
-     * Disable auto update date-time view
-     */
-    private void disableDateTimeUpdate() {
-       unregisterReceiver(dateTimeChangedReceiver);
-    }
-
-    private void setupCityView() {
-        cityView.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                Uri uri = Uri.parse(getString(R.string.city_about) + settings.getCity());
-                Intent cityDetailsBrowser = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(cityDetailsBrowser);
-            }
-        });
-    }
-    /**
-     * Update location view
-     */
-    private void updateLocation() {
-        cityView.setText(settings.getCity());
-    }
-
-
-
-    /**
-     * Update date-time status view
-     */
-    private void updateDate() {
-        Date currentDate = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat(getString(R.string.date_format), Locale.getDefault());
-        String dateTime = df.format(currentDate);
-        dateTimeView.setText(dateTime);
-    }
-
-    /**
-     * Update temperature value in view
-     */
-    private void updateTemp() {
-        String currentTemperature = Integer.toString(settings.getTemperature());
-        if ( settings.useCelsiusUnit() ) {
-            currentTemperature += getString(R.string.temp_unit_celsius);
-        } else {
-            currentTemperature += getString(R.string.temp_unit_fahrenheit);
-        }
-        temperatureView.setText(currentTemperature);
-    }
-
-    /**
-     * Update weather feels like status
-     */
-    private void updateFeelsLikeTempView() {
-        if ( settings.isShowFeelsLike() ) {
-            feelsLikeView.setVisibility(View.VISIBLE);
-            String tempUnit = getString(R.string.temp_unit_celsius);
-            if ( !settings.useCelsiusUnit() ) {
-                tempUnit = getString(R.string.temp_unit_fahrenheit);
-            }
-            feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getFeelsLikeTemp(), tempUnit));
-        } else {
-            feelsLikeView.setVisibility(View.GONE);
-        }
-    }
-
-    private void updateWindView() {
-        if (settings.isShowWind()) {
-            windView.setVisibility(View.VISIBLE);
-            windView.setText(String.format(Locale.getDefault(), "%.1f m/s", settings.getWindSpeed()));
-        } else {
-            windView.setVisibility(View.GONE);
-        }
-    }
-
-    private void updatePressureView() {
-        if (settings.isShowPressure()) {
-            pressureView.setVisibility(View.VISIBLE);
-            pressureView.setText(String.format(Locale.getDefault(),"%d mm", settings.getPressureBar()));
-        } else {
-            pressureView.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Update weather cloudiness status
-     */
-    private void updateCloudinessView() {
-        cloudinessView.setText(settings.getCloudiness());
-    }
-
-    /**
-     * Update Weather status image
-     */
-    private void updateWeatherView() {
-        if ( settings.getCloudiness().equals(getString(R.string.cloudy))) {
-            weatherView.setImageResource(R.mipmap.ic_cloudly);
+            updateCityViewFragment();
         }
     }
 
@@ -346,15 +277,8 @@ public class MainActivity extends AppCompatActivity {
      * Find activity views
      */
     private void findViews() {
-        cityView = findViewById( R.id.cityView );
-        dateTimeView = findViewById( R.id.dateView );
-        temperatureView = findViewById( R.id.tempView );
-        feelsLikeView = findViewById( R.id.feelsLike );
-        weatherView = findViewById( R.id.imageView);
-        cloudinessView = findViewById( R.id.cloudinessView);
-        settingsViewButton = findViewById(R.id.settingsButton);
-        windView = findViewById(R.id.windView);
-        pressureView = findViewById(R.id.pressureView);
+        citySelectionFragment = (CitySelectionFragment)(getSupportFragmentManager().findFragmentById(R.id.city_list_fragmet));
+        mainToolBar = findViewById(R.id.mainToolbar);
     }
 
 }

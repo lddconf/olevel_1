@@ -6,113 +6,39 @@
     android:layout_height="match_parent"
     tools:context="com.example.weather.MainActivity">
 
-    <TextView
-        android:id="@+id/cityView"
-        android:layout_width="wrap_content"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/mainToolbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="@string/currentcity"
-        android:textAlignment="center"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/dateView"
-        app:layout_constraintEnd_toEndOf="@+id/dateView"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/dateView" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:baselineAlignBottom="true"
-        android:scaleType="fitXY"
+        app:titleTextColor="@color/colorText"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="@style/AppTheme"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/dateView"
-        app:layout_constraintTop_toTopOf="@+id/cityView"
-        android:contentDescription="@string/cloudiness" />
-
-    <ImageView
-        android:id="@+id/settingsButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:scaleType="fitXY"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/settings_label"/>
-
-    <TextView
-        android:id="@+id/dateView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/currentdatetime"
-        android:textAlignment="center"
-        android:textSize="22sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.33" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tempView"
-        android:layout_width="125dp"
-        android:layout_height="51dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/temp_unit_celsius"
-        android:textAlignment="center"
-        android:textSize="40sp"
-        app:layout_constraintEnd_toEndOf="@+id/dateView"
-        app:layout_constraintHorizontal_bias="0.507"
-        app:layout_constraintStart_toStartOf="@+id/dateView"
-        app:layout_constraintTop_toBottomOf="@+id/dateView" />
-
-    <TextView
-        android:id="@+id/feelsLike"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/feels_like"
-        android:textAlignment="center"
-        android:textSize="25sp"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="@+id/dateView"
-        app:layout_constraintStart_toStartOf="@+id/dateView"
-        app:layout_constraintTop_toBottomOf="@+id/tempView"
-        app:layout_constraintVertical_bias="0.0" />
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/mainToolbar"
+        >
 
-    <TextView
-        android:id="@+id/cloudinessView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/cloudy"
-        android:textAlignment="center"
-        android:textSize="25sp"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        <fragment
+            android:id="@+id/city_list_fragmet"
+            android:name="com.example.weather.CitySelectionFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+             />
 
-    <TextView
-        android:id="@+id/pressureView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:text="@string/pressure_label"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="@id/pressureView"
-        app:layout_constraintEnd_toStartOf="@+id/windView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/feelsLike" />
+        <FrameLayout
+            android:id="@+id/weatherViewFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+        />
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/windView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:text="@string/wind_label"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toStartOf="@id/imageView"
-        app:layout_constraintStart_toEndOf="@+id/pressureView"
-        app:layout_constraintTop_toBottomOf="@+id/feelsLike" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
