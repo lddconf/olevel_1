@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -48,8 +49,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if ( savedInstanceState == null ) {
+            options = new WeatherDisplayOptions();
+        } else {
+            WeatherDisplayOptions savedOptions = (WeatherDisplayOptions)savedInstanceState.getSerializable(mainActivityViewOptionsKey);
+            if ( savedOptions != null ) {
+                options = savedOptions;
+            }
+        }
+
+        setTheme(options.getThemeId());
         setContentView(R.layout.activity_main);
-        options = new WeatherDisplayOptions();
+
         findViews();
 
         verticalMode = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
@@ -252,16 +263,21 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         //Apply new settings
-        if ( requestCode == settingsChangedRequestCode && resultCode == RESULT_OK ) {
+        if ( requestCode == settingsChangedRequestCode ) {
             WeatherSettingsActivityCurrentStatus newViewSettings;
-            newViewSettings = (WeatherSettingsActivityCurrentStatus)data.getSerializableExtra(mainActivityViewOptionsKey);
+            newViewSettings = (WeatherSettingsActivityCurrentStatus) data.getSerializableExtra(mainActivityViewOptionsKey);
             assert newViewSettings != null;
             options = newViewSettings.getDisplayOptions();
-
-            for ( CityWeatherSettings w: mCityWeatherList ) {
-                w.setWeatherDisplayOptions(options);
+            if ( resultCode == WeatherSettingsActivity.NEED_RELOAD_TO_APPLY_THEME ) {
+                showSettings();
             }
-            updateCityViewFragment();
+            if ( resultCode == RESULT_OK ) {
+                for (CityWeatherSettings w : mCityWeatherList) {
+                    w.setWeatherDisplayOptions(options);
+                }
+                updateCityViewFragment();
+                recreate();
+            }
         }
     }
 
@@ -285,5 +301,10 @@ public class MainActivity extends AppCompatActivity {
         mainToolBar = findViewById(R.id.mainToolbar);
     }
 
+    private void applyTheme() {
+        startActivity(getIntent());
+        finish();
+        overridePendingTransition(0, 0);
+    }
 }
 

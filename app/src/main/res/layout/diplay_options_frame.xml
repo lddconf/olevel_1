@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/enableWindView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,7 +15,7 @@
         android:text="@string/show_wind_speed"
         android:textSize="25sp"
     />
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/enablePressure"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,7 +26,7 @@
         android:text="@string/show_pressure"
         android:textSize="25sp"
     />
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/enableFeelsLike"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -37,7 +37,7 @@
         android:text="@string/show_feels_like_string"
         android:textSize="25sp"
     />
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/temperatureUnit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -48,4 +48,18 @@
         android:text="@string/temperature_unit_title"
         android:textSize="25sp"
     />
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/themeSelection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:paddingVertical="10dp"
+        android:textOn="@string/dark_theme_label"
+        android:textOff="@string/light_theme_label"
+        app:showText="true"
+        android:text="@string/theme_selection"
+        android:textSize="25sp"
+        />
 </LinearLayout>

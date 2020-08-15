@@ -66,6 +66,7 @@ public class WeatherDisplayFragment extends Fragment {
             settings = (CityWeatherSettings)savedInstanceState.getSerializable(WeatherDisplayOptionsKey);
         }
         findViews(view);
+        updateDate();
     }
 
     @Override

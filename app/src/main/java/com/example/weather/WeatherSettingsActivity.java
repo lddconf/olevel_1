@@ -37,12 +37,15 @@ public class WeatherSettingsActivity extends AppCompatActivity {
 
     private static final boolean debug = false;
 
+    public static final int NEED_RELOAD_TO_APPLY_THEME = RESULT_FIRST_USER + 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.settings_activity);
         settings = (WeatherSettingsActivityCurrentStatus)getIntent().getSerializableExtra(MainActivity.mainActivityViewOptionsKey);
 
+        setTheme(settings.getDisplayOptions().getThemeId());
+        setContentView(R.layout.settings_activity);
         findViews();
         setupCityListSpinner();
         setupHeadToolBar();
@@ -131,6 +134,14 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace( R.id.fragment_container, weatherDisplayOptionsFragment);
         fragmentTransaction.commit();
+
+        weatherDisplayOptionsFragment.setOnThemeChangedListener(new WeatherDisplayOptionsFragment.ThemeChanged() {
+            @Override
+            public void onThemeChanged() {
+                //settings.setDisplayOptions(weatherDisplayOptionsFragment.getCurrentOptions());
+                applyTheme();
+            }
+        });
     }
 
     /**
@@ -163,6 +174,14 @@ public class WeatherSettingsActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void applyTheme() {
+        Intent appliedSettings = new Intent();
+        settings.setDisplayOptions(weatherDisplayOptionsFragment.getCurrentOptions());
+        appliedSettings.putExtra(MainActivity.mainActivityViewOptionsKey, settings);
+        setResult(NEED_RELOAD_TO_APPLY_THEME, appliedSettings);
+        finish();
     }
 
     @Override

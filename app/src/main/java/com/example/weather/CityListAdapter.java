@@ -1,6 +1,7 @@
 package com.example.weather;
 
 import android.content.Context;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,9 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
     private int checkedPosition = -1;
     private int viewMode;
 
+    private int colorWindowBackground;
+    private int colorAccent;
+
     public static int DISPLAY_TEMP_MODE = 0x1;
     public static int DISPLAY_SELECTION_MODE = 0x2;
     /**
@@ -40,6 +44,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             }
         }
 
+
         /**
          * Bind new data to view
          * @param weatherSettings displayed weather settings
@@ -47,12 +52,12 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         void bind( final CityWeatherSettings weatherSettings ) {
             if (checkedPosition == getAdapterPosition() && checkedPosition >= 0) {
                 if ( (mode & DISPLAY_SELECTION_MODE) > 0 ) {
-                    cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
-                    briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
+                    cityNameView.setBackgroundColor(colorAccent);
+                    briefTempView.setBackgroundColor(colorAccent);
                 }
             } else {
-                cityNameView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
-                briefTempView.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
+                cityNameView.setBackgroundColor(colorWindowBackground);
+                briefTempView.setBackgroundColor(colorWindowBackground);
             }
 
             cityNameView.setText(weatherSettings.getCurrentCity());
@@ -97,6 +102,17 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         }
     }
 
+    private void findColors() {
+        colorWindowBackground = 0;
+        TypedValue typedValue = new TypedValue();
+        if (context.getTheme().resolveAttribute(android.R.attr.windowBackground, typedValue, true)) {
+            colorWindowBackground = typedValue.data;
+        }
+        colorAccent = 0;
+        if (context.getTheme().resolveAttribute(android.R.attr.colorAccent, typedValue, true)) {
+            colorAccent = typedValue.data;
+        }
+    }
     /**
      * Object constructor
      * @param mWeatherSet - cities weather array set
@@ -111,6 +127,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
                 //Nothing to do
             }
         };
+        findColors();
     }
 
     /**
