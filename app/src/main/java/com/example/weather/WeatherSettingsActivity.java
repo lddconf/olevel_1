@@ -31,7 +31,6 @@ public class WeatherSettingsActivity extends AppCompatActivity {
     private Spinner citySpinner;
     private WeatherSettingsActivityCurrentStatus settings;
     private Toolbar headToolBar;
-    private final String weatherSettingsActivityKey = "WeatherSettingsActivityKey";
     private static WeatherProviderInterface weatherProvider = new SimpleWeatherProvider();
     private WeatherDisplayOptionsFragment weatherDisplayOptionsFragment;
 
@@ -44,7 +43,12 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         settings = (WeatherSettingsActivityCurrentStatus)getIntent().getSerializableExtra(MainActivity.mainActivityViewOptionsKey);
 
-        setTheme(settings.getDisplayOptions().getThemeId());
+        if ( settings != null ) {
+            setTheme(settings.getDisplayOptions().getThemeId());
+        } else {
+            settings = new WeatherSettingsActivityCurrentStatus();
+        }
+
         setContentView(R.layout.settings_activity);
         findViews();
         setupCityListSpinner();
@@ -135,12 +139,8 @@ public class WeatherSettingsActivity extends AppCompatActivity {
         fragmentTransaction.replace( R.id.fragment_container, weatherDisplayOptionsFragment);
         fragmentTransaction.commit();
 
-        weatherDisplayOptionsFragment.setOnThemeChangedListener(new WeatherDisplayOptionsFragment.ThemeChanged() {
-            @Override
-            public void onThemeChanged() {
-                //settings.setDisplayOptions(weatherDisplayOptionsFragment.getCurrentOptions());
-                applyTheme();
-            }
+        weatherDisplayOptionsFragment.setOnThemeChangedListener(() -> {
+            applyTheme();
         });
     }
 

@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -66,46 +65,30 @@ public class WeatherDisplayOptionsFragment extends Fragment {
     private void setupTemperatureUnit() {
         temperatureUnit.setChecked(settings.isFahrenheitTempUnit());
         updateTemperatureUnit();
-        temperatureUnit.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                updateTemperatureUnit();
-                settings.setTemperatureUnit(isChecked);
-            }
+        temperatureUnit.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateTemperatureUnit();
+            settings.setTemperatureUnit(isChecked);
         });
     }
 
     private void setupWindSwitch() {
-        showWindSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                settings.setShowWindSpeed(b);
-            }
-        });
+        showWindSwitch.setOnCheckedChangeListener((compoundButton, b) -> settings.setShowWindSpeed(b));
     }
 
     private void setupThemeSelection() {
-        themeSelection.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if ( b ) {
-                    settings.setThemeDark();
-                } else {
-                    settings.setThemeLight();
-                }
-                if ( themeChangedCallback != null ) {
-                    themeChangedCallback.onThemeChanged();
-                }
+        themeSelection.setOnCheckedChangeListener((compoundButton, b) -> {
+            if ( b ) {
+                settings.setThemeDark();
+            } else {
+                settings.setThemeLight();
+            }
+            if ( themeChangedCallback != null ) {
+                themeChangedCallback.onThemeChanged();
             }
         });
     }
     private void setupPressureSwitch() {
-        showPressure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                settings.setShowPressure(b);
-            }
-        });
+        showPressure.setOnCheckedChangeListener((compoundButton, b) -> settings.setShowPressure(b));
     }
 
     private void updateThemeSelection() {
@@ -114,12 +97,7 @@ public class WeatherDisplayOptionsFragment extends Fragment {
     }
 
     private void setupFeelsLikeSwitch() {
-        showFeelsLike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                settings.setShowFeelsLike(b);
-            }
-        });
+        showFeelsLike.setOnCheckedChangeListener((compoundButton, b) -> settings.setShowFeelsLike(b));
     }
 
     private void updateShowWindSpeed() {

@@ -1,6 +1,10 @@
 package com.example.weather;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weather.weather.CityWeatherSettings;
@@ -19,8 +24,12 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
     private Context context;
     private ArrayList<CityWeatherSettings> mWeatherSet;
     private OnItemClickListener onItemClickListener;
+    private OnItemUndoDeleteNotify onUndoDeleteNotifyListener;
     private int checkedPosition = -1;
     private int viewMode;
+
+    private CityWeatherSettings itemRecentlyRemoved;
+    private int itemRecentlyRemovedPosition;
 
     private int colorWindowBackground;
     private int colorAccent;
@@ -70,18 +79,8 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             }
             briefTempView.setText(tempUnit);
 
-            cityNameView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        handleOnItemClick();
-                    }
-                });
-            briefTempView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    handleOnItemClick();
-                }
-            });
+            cityNameView.setOnClickListener(view -> handleOnItemClick());
+            briefTempView.setOnClickListener(v -> handleOnItemClick());
 
         }
 
@@ -99,6 +98,64 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         private void findViews(View view) {
             cityNameView = view.findViewById(R.id.cityName);
             briefTempView = view.findViewById(R.id.briefTemp);
+        }
+    }
+
+    public class CityListSwipeToDeleteCallback extends ItemTouchHelper.SimpleCallback {
+        private CityListAdapter adapter;
+        private Drawable icon;
+        private final ColorDrawable background;
+
+        public CityListSwipeToDeleteCallback(CityListAdapter adapter) {
+            super(0, ItemTouchHelper.LEFT );
+            this.adapter = adapter;
+            icon = ContextCompat.getDrawable(adapter.context, R.drawable.ic_baseline_delete_24 );
+
+            TypedValue typedValue = new TypedValue();
+            if (context.getTheme().resolveAttribute(android.R.attr.colorPressedHighlight, typedValue, true)) {
+                background = new ColorDrawable(typedValue.data);
+            } else {
+                background = new ColorDrawable(Color.RED);
+            }
+        }
+
+        @Override
+        public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+
+            View itemView = viewHolder.itemView;
+            int backgroundCornerOffset = 20; //so background is behind the rounded corners of itemView
+
+            int iconMargin = (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+            int iconTop = itemView.getTop() + (itemView.getHeight() - icon.getIntrinsicHeight()) / 2;
+            int iconBottom = iconTop + icon.getIntrinsicHeight();
+
+            if (dX < 0) { // Swiping to the left
+                int iconLeft = itemView.getRight() - iconMargin - icon.getIntrinsicWidth();
+                int iconRight = itemView.getRight() - iconMargin;
+                icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+
+                background.setBounds(itemView.getRight() + ((int) dX) - backgroundCornerOffset,
+                        itemView.getTop(), itemView.getRight(), itemView.getBottom());
+            } else { // view is unSwiped
+                background.setBounds(0, 0, 0, 0);
+            }
+
+            background.draw(c);
+            icon.draw(c);
+        }
+
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            int position = viewHolder.getAdapterPosition();
+            adapter.deleteItem(position);
+
+            if ( position == checkedPosition ) setSelectedItemIndex(-1);
         }
     }
 
@@ -121,13 +178,11 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         this.context = context;
         this.mWeatherSet = mWeatherSet;
         this.viewMode = mode;
-        onItemClickListener = new OnItemClickListener() {
-            @Override
-            public void onItemClick(int id) {
-                //Nothing to do
-            }
-        };
+        onItemClickListener = null;
+        onUndoDeleteNotifyListener = null;
         findColors();
+        itemRecentlyRemoved = null;
+        itemRecentlyRemovedPosition = -1;
     }
 
     /**
@@ -168,7 +223,9 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         if ( checkedPosition >= 0 ) {
             notifyItemChanged(checkedPosition); //For check new
         }
-        onItemClickListener.onItemClick(checkedPosition);
+        if ( onItemClickListener != null ) {
+            onItemClickListener.onItemClick(checkedPosition);
+        }
     }
 
     /**
@@ -194,6 +251,46 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         // - get element from your data set at this position
         // - replace the contents of the view with that element
         holder.bind(mWeatherSet.get(position));
+    }
+
+    public void deleteItem(int position) {
+        itemRecentlyRemoved = mWeatherSet.get(position);
+        itemRecentlyRemovedPosition = position;
+        mWeatherSet.remove(position);
+        notifyItemRemoved(position);
+        notifyAboutUndoOperation();
+    }
+
+    /**
+     * Callback for undo delete
+     */
+    public interface OnItemUndoDeleteNotify {
+        void onUndoDeleteListener();
+    }
+
+    /**
+     * Setup new item deleted event listener
+     * @param e new event handler
+     */
+    public void setOnItemDeletedListener(OnItemUndoDeleteNotify e) {
+        onUndoDeleteNotifyListener = e;
+    }
+
+    private void notifyAboutUndoOperation() {
+        if ( onUndoDeleteNotifyListener != null ) {
+            onUndoDeleteNotifyListener.onUndoDeleteListener();
+        }
+
+    }
+
+    public void undoLastDeleted() {
+        if ( itemRecentlyRemovedPosition >= 0 ) {
+            mWeatherSet.add(itemRecentlyRemovedPosition,
+                    itemRecentlyRemoved);
+            notifyItemInserted(itemRecentlyRemovedPosition);
+            itemRecentlyRemovedPosition = -1;
+            itemRecentlyRemoved = null;
+        }
     }
 
     /**

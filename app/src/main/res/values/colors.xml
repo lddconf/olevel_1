@@ -6,4 +6,6 @@
     <color name="colorAccent">#03DAC5</color>
     <color name="colorAccentDark">#29514E</color>
     <color name="colorRViewSeparator">#989595</color>
+    <color name="blackTextColor">#000000</color>
+    <color name="blackTextColorForDarkTheme">#FDFDFD</color>
 </resources>

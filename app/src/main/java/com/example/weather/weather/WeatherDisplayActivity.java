@@ -2,7 +2,6 @@ package com.example.weather.weather;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.util.Pair;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;

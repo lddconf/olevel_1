@@ -237,28 +237,22 @@ public class WeatherDisplayFragment extends Fragment {
      * Setup On this day history
      */
     private void setupDateTimeViewOnClick() {
-        dateTimeView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Date currentDate = Calendar.getInstance().getTime();
-                SimpleDateFormat df = new SimpleDateFormat("MMMM/d", Locale.getDefault());
-                String url = getString(R.string.on_this_day) + df.format(currentDate).toLowerCase();
-                Uri uri = Uri.parse(url);
-                Intent onThisDayBrowser = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(onThisDayBrowser);
-            }
+        dateTimeView.setOnClickListener(view -> {
+            Date currentDate = Calendar.getInstance().getTime();
+            SimpleDateFormat df = new SimpleDateFormat("MMMM/d", Locale.getDefault());
+            String url = getString(R.string.on_this_day) + df.format(currentDate).toLowerCase();
+            Uri uri = Uri.parse(url);
+            Intent onThisDayBrowser = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(onThisDayBrowser);
         });
     }
 
     private void setupTemperatureViewOnClick() {
-        temperatureView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String url = String.format(getString(R.string.weather_yandex), settings.getCurrentCity());
-                Uri uri = Uri.parse(url.toLowerCase());
-                Intent weatherBrowser = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(weatherBrowser);
-            }
+        temperatureView.setOnClickListener(view -> {
+            String url = String.format(getString(R.string.weather_yandex), settings.getCurrentCity());
+            Uri uri = Uri.parse(url.toLowerCase());
+            Intent weatherBrowser = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(weatherBrowser);
         });
     }
 
