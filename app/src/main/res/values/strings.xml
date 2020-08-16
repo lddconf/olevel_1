@@ -51,6 +51,6 @@
     <string name="city_deleted_undo_snackbar_txt">City has been deleted.</string>
     <string name="undo_city_delete_action">Undo delete</string>
     <string name="about_label">About</string>
-    <string name="about_text">Simple Weather app\nGeekbrains 2020</string>
+    <string name="about_text">Simple Weather app\nAuthors unknown\nGeekbrains, 2020</string>
 
 </resources>
