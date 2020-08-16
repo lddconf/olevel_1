@@ -64,8 +64,9 @@ public class WeatherDisplayFragment extends Fragment {
         //Check for saved settings and extract it if exists
         if ( savedInstanceState != null ) {
             CityWeatherSettings restoredSettings = (CityWeatherSettings)savedInstanceState.getSerializable(WeatherDisplayOptionsKey);
-            if ( restoredSettings != null ) settings = restoredSettings;
-
+            if ( restoredSettings != null ) {
+                settings = restoredSettings;
+            }
         }
         findViews(view);
         updateDate();
