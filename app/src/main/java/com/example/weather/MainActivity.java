@@ -58,10 +58,13 @@ public class MainActivity extends AppCompatActivity {
                 options = savedOptions;
             }
             try {
+                selectedIndex = savedInstanceState.getInt(mainActivitySelectedIndexKey);
                 @SuppressWarnings("unchecked")
                 ArrayList<CityWeatherSettings> restoredCityList = (ArrayList<CityWeatherSettings>)savedInstanceState.getSerializable(mainActivityCityListKey);
                 if ( restoredCityList != null ) {
                     mCityWeatherList = restoredCityList;
+                } else {
+                    mCityWeatherList = new ArrayList<>();
                 }
             } catch (ClassCastException e) {
                 e.printStackTrace();
@@ -220,7 +223,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putSerializable(mainActivitySelectedIndexKey, selectedIndex);
         outState.putSerializable(mainActivityViewOptionsKey, options);
-        outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
+
+        if ( mCityWeatherList.size() > 0 ) {
+            outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
+        }
         onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
     }
@@ -329,4 +335,3 @@ public class MainActivity extends AppCompatActivity {
         mainToolBar = findViewById(R.id.mainToolbar);
     }
 }
-
