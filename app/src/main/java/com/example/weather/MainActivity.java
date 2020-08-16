@@ -49,26 +49,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if ( savedInstanceState == null ) {
-            options = new WeatherDisplayOptions();
 
-        } else {
-            WeatherDisplayOptions savedOptions = (WeatherDisplayOptions)savedInstanceState.getSerializable(mainActivityViewOptionsKey);
-            if ( savedOptions != null ) {
-                options = savedOptions;
-            }
-            try {
-                selectedIndex = savedInstanceState.getInt(mainActivitySelectedIndexKey);
-                @SuppressWarnings("unchecked")
-                ArrayList<CityWeatherSettings> restoredCityList = (ArrayList<CityWeatherSettings>)savedInstanceState.getSerializable(mainActivityCityListKey);
-                if ( restoredCityList != null ) {
-                    mCityWeatherList = restoredCityList;
-                } else {
-                    mCityWeatherList = new ArrayList<>();
-                }
-            } catch (ClassCastException e) {
-                e.printStackTrace();
-            }
+        restoreSettingsFromBundle(savedInstanceState);
+
+        if ( options == null ) {
+            options = new WeatherDisplayOptions();
         }
 
         setTheme(options.getThemeId());
@@ -129,9 +114,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCityViewFragment() {
-        citySelectionFragment.setWeatherSettingsArray(mCityWeatherList);
-        if (!verticalMode) {
-            citySelectionFragment.setItemSelected(selectedIndex);
+        if ( citySelectionFragment != null ) {
+            citySelectionFragment.setWeatherSettingsArray(mCityWeatherList);
+            if (!verticalMode) {
+                citySelectionFragment.setItemSelected(selectedIndex);
+            }
         }
     }
 
@@ -223,23 +210,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putSerializable(mainActivitySelectedIndexKey, selectedIndex);
         outState.putSerializable(mainActivityViewOptionsKey, options);
+        outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
 
-        if ( mCityWeatherList.size() > 0 ) {
-            outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
-        }
         onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
     }
 
-    /**
-     * Activity in restore instance stuff
-     * @param savedInstanceState - saved instance
-     */
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
+    private void restoreSettingsFromBundle(@Nullable Bundle savedInstanceState) {
         try {
+            if ( savedInstanceState == null ) return;
             selectedIndex = savedInstanceState.getInt(mainActivitySelectedIndexKey);
+
+            @SuppressWarnings("unchecked")
+            ArrayList<CityWeatherSettings> restoredCityList = (ArrayList<CityWeatherSettings>)savedInstanceState.getSerializable(mainActivityCityListKey);
+            if ( restoredCityList != null ) {
+                mCityWeatherList = restoredCityList;
+            } else {
+                mCityWeatherList = new ArrayList<>();
+            }
+
             WeatherDisplayOptions savedOptions = (WeatherDisplayOptions)savedInstanceState.getSerializable(mainActivityViewOptionsKey);
             if ( savedOptions != null ) {
                 options = savedOptions;
@@ -251,6 +240,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (ClassCastException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Activity in restore instance stuff
+     * @param savedInstanceState - saved instance
+     */
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreSettingsFromBundle(savedInstanceState);
 
         onDebug("onRestoreInstanceState");
     }
