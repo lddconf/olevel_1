@@ -18,10 +18,10 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <fragment
-        android:id="@+id/city_list_fragmet"
+        android:id="@+id/city_list_fragment"
         android:name="com.example.weather.CitySelectionFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@+id/mainToolbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

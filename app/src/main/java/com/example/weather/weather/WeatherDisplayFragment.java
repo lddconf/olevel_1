@@ -14,15 +14,20 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weather.R;
-import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.text.SimpleDateFormat;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class WeatherDisplayFragment extends Fragment {
     private TextView dateTimeView;
@@ -34,6 +39,8 @@ public class WeatherDisplayFragment extends Fragment {
     private ImageView weatherView;
     private CityWeatherSettings settings;
     private BroadcastReceiver dateTimeChangedReceiver;
+
+    private RecyclerView weatherWeekDetails;
 
     public static final String WeatherDisplayOptionsKey = "DisplayOptionsKey";
 
@@ -66,6 +73,7 @@ public class WeatherDisplayFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         setupDateTimeViewOnClick();
         setupTemperatureViewOnClick();
+        setupWeatherWeekList();
         updateViews();
     }
 
@@ -84,14 +92,6 @@ public class WeatherDisplayFragment extends Fragment {
      */
     public void setWeather(@NonNull WeatherEntity weather) {
         settings.setWeather(weather);
-        updateViews();
-    }
-
-    /**
-     * Apply new display settings
-     */
-    public void setWeatherDisplayOptions(@NonNull WeatherDisplayOptions options) {
-        settings.setWeatherDisplayOptions(options);
         updateViews();
     }
 
@@ -121,7 +121,25 @@ public class WeatherDisplayFragment extends Fragment {
         cloudinessView = view.findViewById( R.id.cloudinessView);
         windView = view.findViewById(R.id.windView);
         pressureView = view.findViewById(R.id.pressureView);
+
+        weatherWeekDetails = view.findViewById(R.id.weather_week_details);
     }
+
+    /**
+     * Setup weathers hourly list
+     */
+    private void setupWeatherWeekList() {
+        RecyclerView.LayoutManager lm = new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL, false);
+        weatherWeekDetails.setLayoutManager(lm);
+
+        DividerItemDecoration itemDecoration = new DividerItemDecoration(requireContext(),  LinearLayoutManager.HORIZONTAL);
+        itemDecoration.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(requireContext(),R.drawable.recycleview_separator)));
+        weatherWeekDetails.addItemDecoration(itemDecoration);
+
+        WeatherWeekDetailsAdapter wHAdapter = new WeatherWeekDetailsAdapter(settings.getWeekForecast());
+        weatherWeekDetails.setAdapter(wHAdapter);
+    }
+
 
     /**
      * Update date-time status view
@@ -209,7 +227,7 @@ public class WeatherDisplayFragment extends Fragment {
      * Update Weather status image
      */
     private void updateWeatherView() {
-        if ( settings.getWeather().getCloudiness().equals(getString(R.string.cloudy))) {
+        if ( settings.getWeather().getCloudiness().equals(requireContext().getString(R.string.cloudy))) {
             weatherView.setImageResource(R.mipmap.ic_cloudly);
         }
     }
