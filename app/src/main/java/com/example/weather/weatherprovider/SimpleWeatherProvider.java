@@ -1,6 +1,8 @@
-package com.example.weather.weather;
+package com.example.weather.weatherprovider;
 
 import androidx.annotation.Nullable;
+
+import com.example.weather.weather.WeatherEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;

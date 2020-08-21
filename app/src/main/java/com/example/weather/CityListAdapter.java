@@ -71,11 +71,15 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
 
             cityNameView.setText(weatherSettings.getCurrentCity());
 
-            String tempUnit = Integer.toString(weatherSettings.getWeather().getTemperature());
-            if (weatherSettings.getWeather().isFahrenheitTempUnit()) {
-                tempUnit += context.getString(R.string.temp_unit_fahrenheit);
-            } else {
-                tempUnit += context.getString(R.string.temp_unit_celsius);
+            String tempUnit = context.getString(R.string.not_avaliable);
+
+            if ( weatherSettings.getWeather() != null ) {
+                tempUnit = Integer.toString(weatherSettings.getWeather().getTemperature());
+                if (weatherSettings.getWeather().isFahrenheitTempUnit()) {
+                    tempUnit += context.getString(R.string.temp_unit_fahrenheit);
+                } else {
+                    tempUnit += context.getString(R.string.temp_unit_celsius);
+                }
             }
             briefTempView.setText(tempUnit);
 

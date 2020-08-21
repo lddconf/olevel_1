@@ -17,8 +17,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
-import com.example.weather.weather.SimpleWeatherProvider;
-import com.example.weather.weather.WeatherProviderInterface;
+import com.example.weather.weatherprovider.SimpleWeatherProvider;
+import com.example.weather.weatherprovider.WeatherProviderInterface;
 
 
 import java.util.Objects;
