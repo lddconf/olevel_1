@@ -1,19 +1,35 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppThemeLight" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:textColor">@color/colorText</item>
-        <item name="android:windowBackground">@color/colorBackground</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:actionBarStyle">@style/MainActionBar</item>
+        <item name="android:textColor">@color/blackTextColor</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 
-    <style name="MainActionBar" parent="@android:style/Widget.Holo.Light.ActionBar">
-        <item name="android:background">@color/colorBackground</item>
-        <item name="android:textColor">@color/colorText</item>
+    <style name="AppThemeDark" parent="Theme.MaterialComponents">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryDarkTheme</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:textColor">@color/blackTextColorForDarkTheme</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="colorAccent">@color/colorAccentDark</item>
     </style>
 
+    <style name="SwitchSettingsStyle" >
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:paddingVertical">10dp</item>
+        <item name="android:textSize">25sp</item>
+    </style>
+
+    <style name="CityInfoRecyclerView">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:textSize">25sp</item>
+    </style>
 </resources>

@@ -1,5 +1,7 @@
 package com.example.weather.diplayoption;
 
+import com.example.weather.R;
+
 import java.io.Serializable;
 
 /**
@@ -10,16 +12,18 @@ public class WeatherDisplayOptions implements Serializable {
     private boolean showWindSpeed;
     private boolean showPressure;
     private boolean showFeelsLike;
+    private int themeId;
 
     public WeatherDisplayOptions() {
-        this(true, true, true, true);
+        this(true, true, true, true, R.style.AppThemeLight);
     }
 
-    public WeatherDisplayOptions(boolean useFahrenheitTempUnit, boolean showWindSpeed, boolean showPressure, boolean showFeelsLike) {
+    public WeatherDisplayOptions(boolean useFahrenheitTempUnit, boolean showWindSpeed, boolean showPressure, boolean showFeelsLike, int themeId) {
         this.useFahrenheitTempUnit = useFahrenheitTempUnit;
         this.showWindSpeed = showWindSpeed;
         this.showPressure = showPressure;
         this.showFeelsLike = showFeelsLike;
+        this.themeId = themeId;
     }
 
     public boolean isFahrenheitTempUnit() {
@@ -52,5 +56,21 @@ public class WeatherDisplayOptions implements Serializable {
 
     public void setShowFeelsLike(boolean showFeelsLike) {
         this.showFeelsLike = showFeelsLike;
+    }
+
+    public int getThemeId() {
+        return themeId;
+    }
+
+    public void setThemeLight() {
+        this.themeId = R.style.AppThemeLight;
+    }
+
+    public void setThemeDark() {
+        this.themeId = R.style.AppThemeDark;
+    }
+
+    public boolean isLightTheme() {
+        return (themeId == R.style.AppThemeLight);
     }
 }

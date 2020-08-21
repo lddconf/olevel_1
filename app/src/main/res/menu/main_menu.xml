@@ -13,4 +13,10 @@
         android:icon="@android:drawable/ic_menu_edit"
         android:title="@string/settings_label">
     </item>
+    <item
+        android:id="@+id/actionAbout"
+        compat:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_help"
+        android:title="@string/about_label">
+    </item>
 </menu>

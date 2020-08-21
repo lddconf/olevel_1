@@ -31,12 +31,16 @@ public class WeatherSettingsActivityCurrentStatus implements Serializable {
      * Get display options entity
      * @return DisplayOptions variable
      */
-    public WeatherDisplayOptions getDisplayOptions() {
+
+    public @NonNull WeatherDisplayOptions getDisplayOptions() {
         return displayOptions;
     }
 
+    /**
+     * Set new display options entity
+     * @param options new display options ref
+     */
     public void setDisplayOptions(@NonNull WeatherDisplayOptions options) {
         displayOptions = options;
     }
-
 }

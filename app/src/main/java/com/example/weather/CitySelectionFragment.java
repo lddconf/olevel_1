@@ -11,10 +11,12 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weather.weather.CityWeatherSettings;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -55,6 +57,20 @@ public class CitySelectionFragment extends Fragment {
         adapter = new CityListAdapter(getContext(), weatherSettingsArrayList,
                 CityListAdapter.DISPLAY_TEMP_MODE | CityListAdapter.DISPLAY_SELECTION_MODE);
         cityList.setAdapter(adapter);
+
+        ItemTouchHelper itemTouchHelper = new
+                ItemTouchHelper(adapter.new CityListSwipeToDeleteCallback(adapter));
+        itemTouchHelper.attachToRecyclerView(cityList);
+
+        adapter.setOnItemDeletedListener(() -> {
+            View view = cityList;
+            Snackbar snackbar = Snackbar.make(view, R.string.city_deleted_undo_snackbar_txt,
+                    Snackbar.LENGTH_LONG);
+            snackbar.setAction(R.string.undo_city_delete_action, v->{
+                adapter.undoLastDeleted();
+            });
+            snackbar.show();
+        });
     }
 
     private void findViews(View view) {
