@@ -2,13 +2,15 @@ package com.example.weather;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -20,10 +22,10 @@ import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 import com.example.weather.weather.CityWeatherSettings;
-import com.example.weather.weatherprovider.SimpleWeatherProvider;
 import com.example.weather.weather.WeatherDisplayActivity;
 import com.example.weather.weather.WeatherDisplayFragment;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -39,9 +41,12 @@ public class MainActivity extends AppCompatActivity {
     private int selectedIndex;
     private CitySelectionFragment citySelectionFragment;
 
+    private NavigationView navigationView;
+    private DrawerLayout drawer;
+
     private View layout;
 
-    private boolean verticalMode;
+    private static boolean verticalMode = true;
 
     private static final String mainActivitySelectedIndexKey = "AppMainActivitySelectedIndexKey";
     private static final String mainActivityCityListKey = "AppMainActivityCityListKey";
@@ -69,11 +74,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setTheme(options.getThemeId());
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_nav);
+
 
         findViews();
-
+/*
         verticalMode = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+*/
 
         if ( mCityWeatherList == null ) {
             //For fist run build data from old state
@@ -83,14 +90,76 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setupWeatherProvider();
-        setupCityViewFragment();
+        //setupCityViewFragment();
         setupActionBar();
-        updateCityViewFragment();
-        onDebug("onCreate");
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, mainToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        showCityList();
+
+        //updateCityViewFragment();
+
+         onDebug("onCreate");
     }
 
+    private void setOnClickForSideMenuItems() {
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.nav_city_list: {
+                        showCityList();
+                        drawer.closeDrawers();
+                        break;
+                    }
+                    /*
+                    case R.id.nav_gallery: {
+                        setGalleryFragment();
+                        drawer.close();
+                        break;
+                    }
+                    case R.id.nav_slideshow: {
+                        setSlideshowFragment();
+                        drawer.close();
+                        break;
+                    }
+                    */
+                }
+                return true;
+            }
+        });
+    }
 
+    private void setupCityViewFragment() {
+        citySelectionFragment.displayTemperature(verticalMode);
+        citySelectionFragment.enableSelection(!verticalMode);
+        updateCityViewFragment();
+    }
 
+    private void showCityList() {
+        if ( citySelectionFragment == null ) {
+            citySelectionFragment = new CitySelectionFragment();
+        }
+        citySelectionFragment.setOnCityViewFragmentEvent(new CitySelectionFragment.OnCityViewFragmentEvent() {
+            @Override
+            public void onCityViewFragmentCreated() {
+                setupCityViewFragment();
+            }
+        });
+        setFragment(citySelectionFragment);
+    }
+
+    private void setFragment(Fragment fragment) {
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.fragmentContainer, fragment);
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        ft.addToBackStack("WS");
+        ft.commit();
+    }
+/*
     private void setupCityViewFragment() {
         //Setup city selection frame view
         citySelectionFragment.displayTemperature(verticalMode);
@@ -128,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
+*/
 
     private void setupWeatherProvider() {
         synchronized (weatherProvider) {
@@ -397,8 +466,15 @@ public class MainActivity extends AppCompatActivity {
      * Find activity views
      */
     private void findViews() {
+
+        drawer = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+
+        /*
         citySelectionFragment = (CitySelectionFragment)(getSupportFragmentManager().findFragmentById(R.id.city_list_fragment));
+        */
         mainToolBar = findViewById(R.id.mainToolbar);
-        layout = findViewById(R.id.main_layout);
+        layout = drawer;
+
     }
 }

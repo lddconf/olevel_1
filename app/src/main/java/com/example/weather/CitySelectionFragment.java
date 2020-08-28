@@ -23,7 +23,7 @@ import java.util.Objects;
 
 public class CitySelectionFragment extends Fragment {
     private RecyclerView cityList;
-
+    private OnCityViewFragmentEvent onCityViewFragmentEvent;
     private CityListAdapter adapter;
     private ArrayList<CityWeatherSettings> weatherSettingsArrayList;
 
@@ -40,6 +40,10 @@ public class CitySelectionFragment extends Fragment {
         findViews(view);
         weatherSettingsArrayList = new ArrayList<>();
         setupCityList();
+
+        if ( onCityViewFragmentEvent != null ) {
+            onCityViewFragmentEvent.onCityViewFragmentCreated();
+        }
     }
 
     private void setupCityList() {
@@ -78,6 +82,13 @@ public class CitySelectionFragment extends Fragment {
     }
 
 
+    public interface OnCityViewFragmentEvent {
+        void onCityViewFragmentCreated();
+    }
+
+    public void setOnCityViewFragmentEvent(final OnCityViewFragmentEvent onCityViewFragmentEvent) {
+        this.onCityViewFragmentEvent = onCityViewFragmentEvent;
+    }
 
     /**
      * Setup item selected callback. Previous will be erased
