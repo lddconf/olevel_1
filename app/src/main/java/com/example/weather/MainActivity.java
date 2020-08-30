@@ -9,6 +9,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.ui.AppBarConfiguration;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,14 +22,15 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptions;
+import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
 import com.example.weather.weather.CityWeatherSettings;
-import com.example.weather.weather.WeatherDisplayActivity;
 import com.example.weather.weather.WeatherDisplayFragment;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,11 +40,15 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar mainToolBar;
     private WeatherDisplayOptions options;
     private ArrayList<CityWeatherSettings> mCityWeatherList;
-    private int selectedIndex;
     private CitySelectionFragment citySelectionFragment;
+
+    private MenuItem citySelectItem;
 
     private NavigationView navigationView;
     private DrawerLayout drawer;
+
+    private int selectedIndex;
+    private int lastSelectedSection;
 
     private View layout;
 
@@ -51,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String mainActivitySelectedIndexKey = "AppMainActivitySelectedIndexKey";
     private static final String mainActivityCityListKey = "AppMainActivityCityListKey";
     public static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
+
     private static final int settingsChangedRequestCode = 0x1;
     private static final boolean debug = false;
 
@@ -71,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         if ( options == null ) {
             options = new WeatherDisplayOptions();
+            options.setTemperatureUnit(false);
         }
 
         setTheme(options.getThemeId());
@@ -78,9 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         findViews();
-/*
-        verticalMode = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
-*/
 
         if ( mCityWeatherList == null ) {
             //For fist run build data from old state
@@ -90,67 +95,93 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setupWeatherProvider();
-        //setupCityViewFragment();
         setupActionBar();
+        setupNavigationDrawer();
+        setOnClickForSideMenuItems();
+
+        selectedIndex = 0;
+
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0 ) {
+            setCurrentWeather();
+        }
+        onDebug("onCreate");
+    }
+
+    private void setupNavigationDrawer() {
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        AppBarConfiguration mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_favorites, R.id.nav_about, R.id.nav_weather_details)
+                .setDrawerLayout(drawer)
+                .build();
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, mainToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
-        showCityList();
-
-        //updateCityViewFragment();
-
-         onDebug("onCreate");
-    }
-
-    private void setOnClickForSideMenuItems() {
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.nav_city_list: {
-                        showCityList();
-                        drawer.closeDrawers();
-                        break;
-                    }
-                    /*
-                    case R.id.nav_gallery: {
-                        setGalleryFragment();
-                        drawer.close();
-                        break;
-                    }
-                    case R.id.nav_slideshow: {
-                        setSlideshowFragment();
-                        drawer.close();
-                        break;
-                    }
-                    */
-                }
-                return true;
-            }
-        });
     }
 
     private void setupCityViewFragment() {
         citySelectionFragment.displayTemperature(verticalMode);
         citySelectionFragment.enableSelection(!verticalMode);
-        updateCityViewFragment();
+        updateWeatherView();
     }
 
-    private void showCityList() {
-        if ( citySelectionFragment == null ) {
-            citySelectionFragment = new CitySelectionFragment();
-        }
+    private void setCityListFragment() {
+        citySelectionFragment = new CitySelectionFragment();
         citySelectionFragment.setOnCityViewFragmentEvent(new CitySelectionFragment.OnCityViewFragmentEvent() {
             @Override
             public void onCityViewFragmentCreated() {
                 setupCityViewFragment();
+                citySelectionFragment.setOnItemSelectedCallBack(index -> {
+                    //Close weather selection
+                    if ( index < mCityWeatherList.size() ) {
+                        CityWeatherSettings wsettings = mCityWeatherList.get(index);
+                        mCityWeatherList.remove(wsettings);
+                        mCityWeatherList.add(0, wsettings);
+                        selectedIndex = 0;
+                        navigateTo(R.id.nav_weather_details);
+                    }
+                });
             }
         });
         setFragment(citySelectionFragment);
     }
+
+    private void setAboutFragment() {
+        setFragment(new AboutFragment());
+    }
+
+    private void setFeedBackFragment() {
+        setFragment(new FeedBackFragment());
+    }
+
+    private void setCurrentWeather() {
+        String city = mCityWeatherList.get(selectedIndex).getCurrentCity();
+        citySelectItem.setTitle(city);
+
+        WeatherDisplayFragment fragment = new WeatherDisplayFragment();
+        Bundle newBundle = new Bundle();
+        newBundle.putSerializable(WeatherDisplayFragment.WeatherDisplayOptionsKey, mCityWeatherList.get(selectedIndex));
+        fragment.setArguments(newBundle);
+        setFragment(fragment);
+
+
+    }
+
+    private void setSettingsFragment() {
+        WeatherDisplayOptionsFragment settings = new WeatherDisplayOptionsFragment();
+        Bundle arguments = new Bundle();
+        arguments.putSerializable(WeatherDisplayOptionsFragment.DisplayOptionsKey, options);
+        settings.setArguments(arguments);
+        settings.setOnThemeChangedListener(() -> {
+            recreate();
+        });
+        setFragment(settings);
+    }
+
+
+
 
     private void setFragment(Fragment fragment) {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -159,45 +190,67 @@ public class MainActivity extends AppCompatActivity {
         ft.addToBackStack("WS");
         ft.commit();
     }
-/*
-    private void setupCityViewFragment() {
-        //Setup city selection frame view
-        citySelectionFragment.displayTemperature(verticalMode);
-        citySelectionFragment.enableSelection(!verticalMode);
 
-        citySelectionFragment.setOnItemSelectedCallBack(index -> {
-
-            //Close weather selection
-            if (selectedIndex >= 0 && index < 0 ) {
-                onBackPressed();
-            }
-
-            selectedIndex = index;
-
-            if ( selectedIndex < 0 | selectedIndex > mCityWeatherList.size() ) return;
-
-            //Display new activity
-            if ( verticalMode ) {
-                Intent newIntent = new Intent(getApplicationContext(), WeatherDisplayActivity.class);
-                newIntent.putExtra(WeatherDisplayFragment.WeatherDisplayOptionsKey, mCityWeatherList.get(selectedIndex));
-                startActivity(newIntent);
-            } else {
-                WeatherDisplayFragment fragment = new WeatherDisplayFragment();
-                Bundle newBundle = new Bundle();
-                newBundle.putSerializable(WeatherDisplayFragment.WeatherDisplayOptionsKey, mCityWeatherList.get(selectedIndex));
-                fragment.setArguments(newBundle);
-
-                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                ft.replace(R.id.weatherViewFragment, fragment);
-                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-
-
-                ft.addToBackStack("WS");
-                ft.commit();
+    private void setOnClickForSideMenuItems() {
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                lastSelectedSection = item.getItemId();
+                return showNavigateFragment(lastSelectedSection);
             }
         });
     }
-*/
+
+    private void navigateTo(int id) {
+        navigationView.setCheckedItem(id);
+        showNavigateFragment(id);
+        lastSelectedSection = id;
+    }
+
+    private void saveOptionIfNeeded() {
+        FragmentManager fm = getSupportFragmentManager();
+        List<Fragment> fragments = fm.getFragments();
+        if (fragments.size() == 0) return;
+        Fragment lastFragment = fragments.get(fragments.size() - 1);
+        if ( lastFragment instanceof WeatherDisplayOptionsFragment ) {
+            options = ((WeatherDisplayOptionsFragment)lastFragment).getCurrentOptions();
+            for (CityWeatherSettings w : mCityWeatherList) {
+                w.setWeatherDisplayOptions(options);
+            }
+        }
+    }
+
+    private boolean showNavigateFragment(int id) {
+        saveOptionIfNeeded();
+        switch (id) {
+            case R.id.nav_favorites:
+                setCityListFragment();
+                drawer.closeDrawers();
+                break;
+            case R.id.nav_about:
+                setAboutFragment();
+                drawer.closeDrawers();
+                break;
+            case R.id.nav_settings:
+                setSettingsFragment();
+                drawer.closeDrawers();
+                break;
+            case R.id.nav_feedback:
+                setFeedBackFragment();
+                drawer.closeDrawers();
+                break;
+            case R.id.nav_weather_details:
+                setCurrentWeather();
+                drawer.closeDrawers();
+                break;
+        }
+        return true;
+    }
+
+    private void displayMessage(String msg) {
+        Snackbar snackbar = Snackbar.make(layout, msg, Snackbar.LENGTH_LONG);
+        snackbar.show();
+    }
 
     private void setupWeatherProvider() {
         synchronized (weatherProvider) {
@@ -207,8 +260,7 @@ public class MainActivity extends AppCompatActivity {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Snackbar snackbar = Snackbar.make(layout, error, Snackbar.LENGTH_LONG);
-                            snackbar.show();
+                            displayMessage(error);
                         }
                     });
                 }
@@ -223,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
                             //Wait for all data
                             if ( city == null ) {
                                 prepareWeatherData();
-                                updateCityViewFragment();
+                                updateWeatherView();
                             }
                         }
                     });
@@ -233,12 +285,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateCityViewFragment() {
-        if ( citySelectionFragment != null ) {
+    private void updateWeatherView() {
+        FragmentManager fm = getSupportFragmentManager();
+        List<Fragment> fragments = fm.getFragments();
+        if (fragments.size() == 0) return;
+        Fragment lastFragment = fragments.get(fragments.size() - 1);
+        if ( lastFragment instanceof WeatherDisplayFragment ) {
+            ((WeatherDisplayFragment)lastFragment).setWeather(mCityWeatherList.get(selectedIndex).getWeather());
+        }
+        if ( lastFragment instanceof CitySelectionFragment ) {
             citySelectionFragment.setWeatherSettingsArray(mCityWeatherList);
-            if (!verticalMode) {
-                citySelectionFragment.setItemSelected(selectedIndex);
-            }
         }
     }
 
@@ -256,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void prepareWeatherData() {
         //Setup old data to display
-        selectedIndex = -1;
+        selectedIndex = 0;
         String[] cities = weatherProvider.getCitiesList();
         mCityWeatherList = new ArrayList<>(cities.length);
         for ( String city: cities ) {
@@ -264,9 +320,6 @@ public class MainActivity extends AppCompatActivity {
             cs.addWeekForecastWeather(weatherProvider.getWeatherWeekForecastFor(city));
             mCityWeatherList.add( cs );
         }
-
-
-
     }
 
     @Override
@@ -299,12 +352,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+
         int countOfFragmentInManager = getSupportFragmentManager().getBackStackEntryCount();
         if(countOfFragmentInManager > 0) {
             getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
-        selectedIndex = -1;
-        citySelectionFragment.setItemSelected(selectedIndex);
+
+        selectedIndex = 0;
+        //citySelectionFragment.setItemSelected(selectedIndex);
     }
 
     /**
@@ -327,11 +382,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.actionSettings:
-                showSettings();
-                return true;
-            case R.id.actionAbout:
-                showAbout();
+            case R.id.actionFindLocation:
+            case R.id.actionAdd:
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -347,7 +399,6 @@ public class MainActivity extends AppCompatActivity {
         outState.putSerializable(mainActivitySelectedIndexKey, selectedIndex);
         outState.putSerializable(mainActivityViewOptionsKey, options);
         outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
-
         onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
     }
@@ -356,7 +407,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             if ( savedInstanceState == null ) return;
             selectedIndex = savedInstanceState.getInt(mainActivitySelectedIndexKey);
-
             @SuppressWarnings("unchecked")
             ArrayList<CityWeatherSettings> restoredCityList = (ArrayList<CityWeatherSettings>)savedInstanceState.getSerializable(mainActivityCityListKey);
             if ( restoredCityList != null ) {
@@ -371,12 +421,14 @@ public class MainActivity extends AppCompatActivity {
                 for ( CityWeatherSettings w: mCityWeatherList ) {
                     w.setWeatherDisplayOptions(options);
                 }
-                updateCityViewFragment();
+                updateWeatherView();
             }
         } catch (ClassCastException e) {
             e.printStackTrace();
         }
     }
+
+
 
     /**
      * Activity in restore instance stuff
@@ -405,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+        //navigateTo(lastSelectedSection);
         onDebug("onResume");
     }
 
@@ -417,37 +469,6 @@ public class MainActivity extends AppCompatActivity {
         Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
         settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(citySelectionFragment.getSelectedCity(), options));
         startActivityForResult(settingsActivity, settingsChangedRequestCode);
-    }
-
-    private void showAbout() {
-        Intent aboutActivity = new Intent(this, AboutActivity.class);
-        aboutActivity.putExtra(mainActivityViewOptionsKey, options);
-        startActivity(aboutActivity);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if ( data == null ) {
-            return;
-        }
-        //Apply new settings
-        if ( requestCode == settingsChangedRequestCode ) {
-            WeatherSettingsActivityCurrentStatus newViewSettings;
-            newViewSettings = (WeatherSettingsActivityCurrentStatus) data.getSerializableExtra(mainActivityViewOptionsKey);
-            assert newViewSettings != null;
-            options = newViewSettings.getDisplayOptions();
-            if ( resultCode == WeatherSettingsActivity.NEED_RELOAD_TO_APPLY_THEME ) {
-                showSettings();
-            }
-            if ( resultCode == RESULT_OK ) {
-                for (CityWeatherSettings w : mCityWeatherList) {
-                    w.setWeatherDisplayOptions(options);
-                }
-                updateCityViewFragment();
-                recreate();
-            }
-        }
     }
 
     /**
@@ -469,11 +490,11 @@ public class MainActivity extends AppCompatActivity {
 
         drawer = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
-
-        /*
-        citySelectionFragment = (CitySelectionFragment)(getSupportFragmentManager().findFragmentById(R.id.city_list_fragment));
-        */
         mainToolBar = findViewById(R.id.mainToolbar);
+
+        Menu menuNav = navigationView.getMenu();
+        citySelectItem = menuNav.findItem(R.id.nav_weather_details);
+
         layout = drawer;
 
     }

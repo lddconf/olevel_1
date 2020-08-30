@@ -36,6 +36,7 @@ public class CitySelectionFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        setRetainInstance(true);
 
         findViews(view);
         weatherSettingsArrayList = new ArrayList<>();
