@@ -11,6 +11,6 @@
         android:id="@+id/actionAdd"
         compat:showAsAction="ifRoom"
         android:icon="@drawable/ic_baseline_add_location_24"
-        android:title="@string/settings_label">
+        android:title="@string/add_new_place_action_label">
     </item>
 </menu>

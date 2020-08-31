@@ -43,7 +43,7 @@
     <string name="settings_label">Settings</string>
     <string name="weather_settings_title">Weather Settings</string>
     <string name="dnt_save_close_label">Don\'t save and close</string>
-    <string name="locate_label">Locate</string>
+    <string name="locate_label">Current place</string>
     <string name="hourly_time">time</string>
     <string name="theme_selection">Theme</string>
     <string name="dark_theme_label">Dark</string>
@@ -75,5 +75,6 @@
     <string name="nav_favorite_place">Favorite place</string>
     <string name="nav_other_places">Other places</string>
     <string name="nav_current_city">Current city</string>
+    <string name="add_new_place_action_label">Add new place</string>
 
 </resources>
