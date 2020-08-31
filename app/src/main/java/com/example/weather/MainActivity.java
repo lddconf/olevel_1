@@ -10,17 +10,21 @@ import androidx.fragment.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 import com.example.weather.weather.CityWeatherSettings;
-import com.example.weather.weather.SimpleWeatherProvider;
+import com.example.weather.weatherprovider.SimpleWeatherProvider;
 import com.example.weather.weather.WeatherDisplayActivity;
 import com.example.weather.weather.WeatherDisplayFragment;
+import com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -34,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<CityWeatherSettings> mCityWeatherList;
     private int selectedIndex;
     private CitySelectionFragment citySelectionFragment;
+
+    private View layout;
+
     private boolean verticalMode;
 
     private static final String mainActivitySelectedIndexKey = "AppMainActivitySelectedIndexKey";
@@ -41,7 +48,11 @@ public class MainActivity extends AppCompatActivity {
     public static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
     private static final int settingsChangedRequestCode = 0x1;
     private static final boolean debug = false;
-    private static SimpleWeatherProvider weatherProvider = new SimpleWeatherProvider();
+
+    private final static OpenWeatherOrgProvider weatherProvider = new OpenWeatherOrgProvider();
+
+    private Handler handler;
+
     /**
      * Activity on create stuff
      * @param savedInstanceState - activity saved instance state
@@ -50,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        handler = new Handler();
         restoreSettingsFromBundle(savedInstanceState);
 
         if ( options == null ) {
@@ -64,9 +76,13 @@ public class MainActivity extends AppCompatActivity {
         verticalMode = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
 
         if ( mCityWeatherList == null ) {
+            //For fist run build data from old state
             prepareWeatherData();
+            //Try to update data
+            refreshWeatherData();
         }
 
+        setupWeatherProvider();
         setupCityViewFragment();
         setupActionBar();
         updateCityViewFragment();
@@ -113,6 +129,41 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    private void setupWeatherProvider() {
+        synchronized (weatherProvider) {
+            weatherProvider.setErrorListener(new OpenWeatherOrgProvider.WeatherOnUpdateErrorListener() {
+                @Override
+                public void onErrorOccurredNotify(String error) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Snackbar snackbar = Snackbar.make(layout, error, Snackbar.LENGTH_LONG);
+                            snackbar.show();
+                        }
+                    });
+                }
+            });
+
+            weatherProvider.setUpdateListener(new OpenWeatherOrgProvider.WeatherUpdatedListener() {
+                @Override
+                public void onWeatherUpdatedNotify(String city) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Wait for all data
+                            if ( city == null ) {
+                                prepareWeatherData();
+                                updateCityViewFragment();
+                            }
+                        }
+                    });
+                }
+            });
+
+        }
+    }
+
     private void updateCityViewFragment() {
         if ( citySelectionFragment != null ) {
             citySelectionFragment.setWeatherSettingsArray(mCityWeatherList);
@@ -122,7 +173,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void refreshWeatherData() {
+        //Request new weather data from internet
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (weatherProvider) {
+                    weatherProvider.updateWeatherList();
+                }
+            }
+        }).start();
+    }
+
     private void prepareWeatherData() {
+        //Setup old data to display
         selectedIndex = -1;
         String[] cities = weatherProvider.getCitiesList();
         mCityWeatherList = new ArrayList<>(cities.length);
@@ -131,6 +195,9 @@ public class MainActivity extends AppCompatActivity {
             cs.addWeekForecastWeather(weatherProvider.getWeatherWeekForecastFor(city));
             mCityWeatherList.add( cs );
         }
+
+
+
     }
 
     @Override
@@ -332,5 +399,6 @@ public class MainActivity extends AppCompatActivity {
     private void findViews() {
         citySelectionFragment = (CitySelectionFragment)(getSupportFragmentManager().findFragmentById(R.id.city_list_fragment));
         mainToolBar = findViewById(R.id.mainToolbar);
+        layout = findViewById(R.id.main_layout);
     }
 }

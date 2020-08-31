@@ -1,6 +1,7 @@
 package com.example.weather.weather;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 
@@ -97,7 +98,7 @@ public class CityWeatherSettings implements Serializable {
      * Get current weather
      * @return current weather
      */
-    @NonNull
+    @Nullable
     public WeatherEntity getWeather() {
         return currentWeather;
     }
@@ -106,8 +107,12 @@ public class CityWeatherSettings implements Serializable {
      * Setup new weather
      * @param entity - new weather entity
      */
-    public void setWeather(@NonNull WeatherEntity entity ) {
-        currentWeather = formatWeatherWithOptions(entity, displayOptions);
+    public void setWeather(@Nullable WeatherEntity entity ) {
+        if ( entity != null ) {
+            currentWeather = formatWeatherWithOptions(entity, displayOptions);
+        } else {
+            currentWeather = null;
+        }
     }
 
     private WeatherEntity formatWeatherWithOptions(@NonNull WeatherEntity entity, @NonNull WeatherDisplayOptions options) {

@@ -48,6 +48,7 @@ public class WeatherDisplayFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         settings = new CityWeatherSettings();
+        settings.setWeather(null);
         //Extract startup settings if possible
         if (getArguments() != null ) {
             CityWeatherSettings injectedSettings = (CityWeatherSettings)getArguments().getSerializable(WeatherDisplayOptionsKey);
@@ -94,7 +95,7 @@ public class WeatherDisplayFragment extends Fragment {
     /**
      * Display new weather
      */
-    public void setWeather(@NonNull WeatherEntity weather) {
+    public void setWeather(@Nullable WeatherEntity weather) {
         settings.setWeather(weather);
         updateViews();
     }
@@ -159,13 +160,17 @@ public class WeatherDisplayFragment extends Fragment {
      * Update temperature value in view
      */
     private void updateTemp() {
-        String currentTemperature = Integer.toString(settings.getWeather().getTemperature());
-        if ( !settings.getWeather().isFahrenheitTempUnit() ) {
-            currentTemperature += getString(R.string.temp_unit_celsius);
+        if ( settings.getWeather() != null ) {
+            String currentTemperature = Integer.toString(settings.getWeather().getTemperature());
+            if ( !settings.getWeather().isFahrenheitTempUnit() ) {
+                currentTemperature += getString(R.string.temp_unit_celsius);
+            } else {
+                currentTemperature += getString(R.string.temp_unit_fahrenheit);
+            }
+            temperatureView.setText(currentTemperature);
         } else {
-            currentTemperature += getString(R.string.temp_unit_fahrenheit);
+            temperatureView.setText(R.string.not_avaliable);
         }
-        temperatureView.setText(currentTemperature);
     }
 
     /**
@@ -174,11 +179,16 @@ public class WeatherDisplayFragment extends Fragment {
     private void updateFeelsLikeTempView() {
         if ( settings.getWeatherDisplayOptions().isShowFeelsLike() ) {
             feelsLikeView.setVisibility(View.VISIBLE);
-            String tempUnit = getString(R.string.temp_unit_celsius);
-            if ( settings.getWeather().isFahrenheitTempUnit() ) {
-                tempUnit = getString(R.string.temp_unit_fahrenheit);
+
+            if ( settings.getWeather() != null ) {
+                String tempUnit = getString(R.string.temp_unit_celsius);
+                if ( settings.getWeather().isFahrenheitTempUnit() ) {
+                    tempUnit = getString(R.string.temp_unit_fahrenheit);
+                }
+                feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getWeather().getFeelsLikeTemp(), tempUnit));
+            } else {
+                feelsLikeView.setText(R.string.not_avaliable);
             }
-            feelsLikeView.setText(String.format("%s %s%s", getString(R.string.feels_like), settings.getWeather().getFeelsLikeTemp(), tempUnit));
         } else {
             feelsLikeView.setVisibility(View.GONE);
         }
@@ -202,7 +212,11 @@ public class WeatherDisplayFragment extends Fragment {
     private void updateWindView() {
         if (settings.getWeatherDisplayOptions().isShowWindSpeed()) {
             windView.setVisibility(View.VISIBLE);
-            windView.setText(String.format(Locale.getDefault(), "%.1f m/s", settings.getWeather().getWindSpeed()));
+            if ( settings.getWeather() != null ) {
+                windView.setText(String.format(Locale.getDefault(), "%.1f m/s", settings.getWeather().getWindSpeed()));
+            } else {
+                windView.setText(R.string.not_avaliable);
+            }
         } else {
             windView.setVisibility(View.GONE);
         }
@@ -214,7 +228,13 @@ public class WeatherDisplayFragment extends Fragment {
     private void updatePressureView() {
         if (settings.getWeatherDisplayOptions().isShowPressure()) {
             pressureView.setVisibility(View.VISIBLE);
-            pressureView.setText(String.format(Locale.getDefault(),"%d mm", settings.getWeather().getPressureBar()));
+
+            if ( settings.getWeather() != null ) {
+                pressureView.setText(String.format(Locale.getDefault(), "%d mm", settings.getWeather().getPressureBar()));
+            } else {
+                pressureView.setText(R.string.not_avaliable);
+            }
+
         } else {
             pressureView.setVisibility(View.GONE);
         }
@@ -224,15 +244,26 @@ public class WeatherDisplayFragment extends Fragment {
      * Update weather cloudiness status
      */
     private void updateCloudinessView() {
-        cloudinessView.setText(settings.getWeather().getCloudiness());
+        if ( settings.getWeather() != null ) {
+            cloudinessView.setText(settings.getWeather().getCloudiness());
+        } else {
+            cloudinessView.setText(R.string.not_avaliable);
+        }
     }
 
     /**
      * Update Weather status image
      */
     private void updateWeatherView() {
-        if ( settings.getWeather().getCloudiness().equals(requireContext().getString(R.string.cloudy))) {
-            weatherView.setImageResource(R.mipmap.ic_cloudly);
+
+        if ( settings.getWeather() != null ) {
+            if ( settings.getWeather().getCloudiness().equals(requireContext().getString(R.string.cloudy))) {
+                weatherView.setImageResource(R.mipmap.ic_cloudly);
+            } else {
+                weatherView.setImageDrawable(null);
+            }
+        } else {
+            weatherView.setImageDrawable(null);
         }
     }
 
