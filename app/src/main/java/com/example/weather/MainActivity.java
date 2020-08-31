@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int selectedIndex;
     private int lastSelectedSection;
+    private boolean silentCityIndexSet = false;
 
     private View layout;
 
@@ -138,14 +139,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCityViewFragmentCreated() {
                 setupCityViewFragment();
+                if ( mCityWeatherList.size() > 0 ) {
+                    citySelectionFragment.setItemSelected(selectedIndex);
+                }
                 citySelectionFragment.setOnItemSelectedCallBack(index -> {
                     //Close weather selection
                     if ( index < mCityWeatherList.size() ) {
-                        CityWeatherSettings wsettings = mCityWeatherList.get(index);
-                        mCityWeatherList.remove(wsettings);
-                        mCityWeatherList.add(0, wsettings);
-                        selectedIndex = 0;
-                        navigateTo(R.id.nav_weather_details);
+                        if ( index >= 0 ) {
+                            CityWeatherSettings wsettings = mCityWeatherList.get(index);
+                            mCityWeatherList.remove(wsettings);
+                            mCityWeatherList.add(0, wsettings);
+                            selectedIndex = 0;
+                            if ( silentCityIndexSet ) {
+                                navViewDisplayCity();
+                                silentCityIndexSet = false;
+                            } else {
+                                navigateTo(R.id.nav_weather_details);
+                            }
+                        } else { //Deleted item
+                            silentCityIndexSet = true;
+                            citySelectionFragment.setItemSelected(0);
+                        }
                     }
                 });
             }
@@ -165,6 +179,9 @@ public class MainActivity extends AppCompatActivity {
         if ( selectedIndex >=0 && mCityWeatherList.size() > selectedIndex ) {
             String city = mCityWeatherList.get(selectedIndex).getCurrentCity();
             citySelectItem.setTitle(city);
+            citySelectItem.setEnabled(true);
+        } else {
+            citySelectItem.setEnabled(false);
         }
     }
 
@@ -302,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
             ((WeatherDisplayFragment)lastFragment).setWeather(mCityWeatherList.get(selectedIndex).getWeather());
         }
         if ( lastFragment instanceof CitySelectionFragment ) {
-            citySelectionFragment.setWeatherSettingsArray(mCityWeatherList);
+            ((CitySelectionFragment)lastFragment).setWeatherSettingsArray(mCityWeatherList);
         }
     }
 
@@ -441,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
                 for ( CityWeatherSettings w: mCityWeatherList ) {
                     w.setWeatherDisplayOptions(options);
                 }
-                updateWeatherView();
+
             }
         } catch (ClassCastException e) {
             e.printStackTrace();
@@ -459,6 +476,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState);
         restoreSettingsFromBundle(savedInstanceState);
         navViewDisplayCity();
+        updateWeatherView();
         onDebug("onRestoreInstanceState");
     }
 
