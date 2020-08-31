@@ -364,15 +364,17 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        int countOfFragmentInManager = getSupportFragmentManager().getBackStackEntryCount();
-        if(countOfFragmentInManager > 1) {
-            getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            selectedIndex = 0;
-            navigateTo(R.id.nav_weather_details);
-            return;
-        }
 
-        getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        int countOfFragmentInManager = getSupportFragmentManager().getBackStackEntryCount();
+        if(countOfFragmentInManager > 0) {
+            getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            if (lastSelectedSection != R.id.nav_weather_details ) {
+                selectedIndex = 0;
+                navigateTo(R.id.nav_weather_details);
+                return;
+            }
+        }
+        //getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
         //citySelectionFragment.setItemSelected(selectedIndex);
         super.onBackPressed();
     }
