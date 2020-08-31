@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -15,6 +16,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -52,10 +54,10 @@ public class MainActivity extends AppCompatActivity {
 
     private View layout;
 
-    private static boolean verticalMode = true;
-
     private static final String mainActivitySelectedIndexKey = "AppMainActivitySelectedIndexKey";
     private static final String mainActivityCityListKey = "AppMainActivityCityListKey";
+    private static final String mainActivityLastSelectedSectionKey = "AppMainActivityLastSelectedSectionKey";
+
     public static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
 
     private static final int settingsChangedRequestCode = 0x1;
@@ -100,9 +102,11 @@ public class MainActivity extends AppCompatActivity {
         setOnClickForSideMenuItems();
 
         selectedIndex = 0;
+        navViewDisplayCity();
 
+        lastSelectedSection = -1;
         if (getSupportFragmentManager().getBackStackEntryCount() == 0 ) {
-            setCurrentWeather();
+            navigateTo(R.id.nav_weather_details);
         }
         onDebug("onCreate");
     }
@@ -122,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupCityViewFragment() {
+        boolean verticalMode = true;
         citySelectionFragment.displayTemperature(verticalMode);
         citySelectionFragment.enableSelection(!verticalMode);
         updateWeatherView();
@@ -156,17 +161,21 @@ public class MainActivity extends AppCompatActivity {
         setFragment(new FeedBackFragment());
     }
 
+    private void navViewDisplayCity() {
+        if ( selectedIndex >=0 && mCityWeatherList.size() > selectedIndex ) {
+            String city = mCityWeatherList.get(selectedIndex).getCurrentCity();
+            citySelectItem.setTitle(city);
+        }
+    }
+
     private void setCurrentWeather() {
-        String city = mCityWeatherList.get(selectedIndex).getCurrentCity();
-        citySelectItem.setTitle(city);
+        navViewDisplayCity();
 
         WeatherDisplayFragment fragment = new WeatherDisplayFragment();
         Bundle newBundle = new Bundle();
         newBundle.putSerializable(WeatherDisplayFragment.WeatherDisplayOptionsKey, mCityWeatherList.get(selectedIndex));
         fragment.setArguments(newBundle);
         setFragment(fragment);
-
-
     }
 
     private void setSettingsFragment() {
@@ -195,8 +204,7 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                lastSelectedSection = item.getItemId();
-                return showNavigateFragment(lastSelectedSection);
+                return showNavigateFragment(item.getItemId());
             }
         });
     }
@@ -204,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
     private void navigateTo(int id) {
         navigationView.setCheckedItem(id);
         showNavigateFragment(id);
-        lastSelectedSection = id;
+
     }
 
     private void saveOptionIfNeeded() {
@@ -222,27 +230,26 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean showNavigateFragment(int id) {
         saveOptionIfNeeded();
-        switch (id) {
-            case R.id.nav_favorites:
-                setCityListFragment();
-                drawer.closeDrawers();
-                break;
-            case R.id.nav_about:
-                setAboutFragment();
-                drawer.closeDrawers();
-                break;
-            case R.id.nav_settings:
-                setSettingsFragment();
-                drawer.closeDrawers();
-                break;
-            case R.id.nav_feedback:
-                setFeedBackFragment();
-                drawer.closeDrawers();
-                break;
-            case R.id.nav_weather_details:
-                setCurrentWeather();
-                drawer.closeDrawers();
-                break;
+        drawer.closeDrawers();
+        if (lastSelectedSection != id ) {
+            switch (id) {
+                case R.id.nav_favorites:
+                    setCityListFragment();
+                    break;
+                case R.id.nav_about:
+                    setAboutFragment();
+                    break;
+                case R.id.nav_settings:
+                    setSettingsFragment();
+                    break;
+                case R.id.nav_feedback:
+                    setFeedBackFragment();
+                    break;
+                case R.id.nav_weather_details:
+                    setCurrentWeather();
+                    break;
+            }
+            lastSelectedSection = id;
         }
         return true;
     }
@@ -290,6 +297,7 @@ public class MainActivity extends AppCompatActivity {
         List<Fragment> fragments = fm.getFragments();
         if (fragments.size() == 0) return;
         Fragment lastFragment = fragments.get(fragments.size() - 1);
+        if ( lastFragment == null) return;
         if ( lastFragment instanceof WeatherDisplayFragment ) {
             ((WeatherDisplayFragment)lastFragment).setWeather(mCityWeatherList.get(selectedIndex).getWeather());
         }
@@ -351,15 +359,22 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-
-        int countOfFragmentInManager = getSupportFragmentManager().getBackStackEntryCount();
-        if(countOfFragmentInManager > 0) {
-            getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+            return;
         }
 
-        selectedIndex = 0;
+        int countOfFragmentInManager = getSupportFragmentManager().getBackStackEntryCount();
+        if(countOfFragmentInManager > 1) {
+            getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            selectedIndex = 0;
+            navigateTo(R.id.nav_weather_details);
+            return;
+        }
+
+        getSupportFragmentManager().popBackStack("WS", FragmentManager.POP_BACK_STACK_INCLUSIVE);
         //citySelectionFragment.setItemSelected(selectedIndex);
+        super.onBackPressed();
     }
 
     /**
@@ -399,6 +414,8 @@ public class MainActivity extends AppCompatActivity {
         outState.putSerializable(mainActivitySelectedIndexKey, selectedIndex);
         outState.putSerializable(mainActivityViewOptionsKey, options);
         outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
+        outState.putSerializable(mainActivityLastSelectedSectionKey, lastSelectedSection);
+
         onDebug("onSaveInstanceState");
         super.onSaveInstanceState(outState);
     }
@@ -407,6 +424,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             if ( savedInstanceState == null ) return;
             selectedIndex = savedInstanceState.getInt(mainActivitySelectedIndexKey);
+            lastSelectedSection = savedInstanceState.getInt(mainActivityLastSelectedSectionKey);
             @SuppressWarnings("unchecked")
             ArrayList<CityWeatherSettings> restoredCityList = (ArrayList<CityWeatherSettings>)savedInstanceState.getSerializable(mainActivityCityListKey);
             if ( restoredCityList != null ) {
@@ -438,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         restoreSettingsFromBundle(savedInstanceState);
-
+        navViewDisplayCity();
         onDebug("onRestoreInstanceState");
     }
 
@@ -461,15 +479,6 @@ public class MainActivity extends AppCompatActivity {
         onDebug("onResume");
     }
 
-
-    /**
-     * Dislay settings activity
-     */
-    private void showSettings() {
-        Intent settingsActivity = new Intent(getApplicationContext(), WeatherSettingsActivity.class);
-        settingsActivity.putExtra(mainActivityViewOptionsKey, new WeatherSettingsActivityCurrentStatus(citySelectionFragment.getSelectedCity(), options));
-        startActivityForResult(settingsActivity, settingsChangedRequestCode);
-    }
 
     /**
      * Debug purposes
