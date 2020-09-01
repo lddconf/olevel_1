@@ -30,6 +30,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class WeatherDisplayFragment extends Fragment {
+    private TextView cityView;
     private TextView dateTimeView;
     private TextView temperatureView;
     private TextView feelsLikeView;
@@ -127,7 +128,7 @@ public class WeatherDisplayFragment extends Fragment {
         cloudinessView = view.findViewById( R.id.cloudinessView);
         windView = view.findViewById(R.id.windView);
         pressureView = view.findViewById(R.id.pressureView);
-
+        cityView = view.findViewById(R.id.current_place);
         weatherWeekDetails = view.findViewById(R.id.weather_week_details);
     }
 
@@ -174,6 +175,14 @@ public class WeatherDisplayFragment extends Fragment {
         }
     }
 
+    private void updateCurrentCity() {
+        if ( settings.getCity() != null && settings.getCity().length() > 0) {
+            cityView.setText(settings.getCity());
+        } else {
+            cityView.setText(R.string.not_avaliable);
+        }
+    }
+
     /**
      * Update weather feels like status
      */
@@ -205,6 +214,7 @@ public class WeatherDisplayFragment extends Fragment {
         updateWeatherView();
         updateWindView();
         updatePressureView();
+        updateCurrentCity();
     }
 
     /**
@@ -284,7 +294,7 @@ public class WeatherDisplayFragment extends Fragment {
 
     private void setupTemperatureViewOnClick() {
         temperatureView.setOnClickListener(view -> {
-            String url = String.format(getString(R.string.weather_yandex), settings.getCurrentCity());
+            String url = String.format(getString(R.string.weather_yandex), settings.getCity());
             Uri uri = Uri.parse(url.toLowerCase());
             Intent weatherBrowser = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(weatherBrowser);

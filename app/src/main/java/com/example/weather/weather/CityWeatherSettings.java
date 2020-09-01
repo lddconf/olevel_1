@@ -27,11 +27,14 @@ public class CityWeatherSettings implements Serializable {
     public CityWeatherSettings(String city, WeatherEntity weather, WeatherDisplayOptions options) {
         this.currentCity = city;
         this.currentWeather = weather;
-        weekForecast = new ArrayList<>(14);
+
+        weekForecast = null;
+/*
+                new ArrayList<>(14);
         for (int i = 0; i < 14; i++) {
             weekForecast.add( new WeatherEntity());
         }
-
+*/
         setWeatherDisplayOptions(options);
     }
 
@@ -47,7 +50,7 @@ public class CityWeatherSettings implements Serializable {
      * Get current city
      * @return current city
      */
-    public String getCurrentCity() {
+    public String getCity() {
         return currentCity;
     }
 
@@ -89,8 +92,10 @@ public class CityWeatherSettings implements Serializable {
      * Apply weather settings
      */
     private void applyWeekForecastOptions() {
-        for (int i = 0; i < weekForecast.size(); i++) {
-            weekForecast.set(i, formatWeatherWithOptions(weekForecast.get(i), displayOptions));
+        if ( weekForecast != null ) {
+            for (int i = 0; i < weekForecast.size(); i++) {
+                weekForecast.set(i, formatWeatherWithOptions(weekForecast.get(i), displayOptions));
+            }
         }
     }
 

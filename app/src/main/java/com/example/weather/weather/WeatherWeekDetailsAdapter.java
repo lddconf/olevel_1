@@ -83,6 +83,6 @@ public class WeatherWeekDetailsAdapter extends RecyclerView.Adapter<WeatherWeekD
 
     @Override
     public int getItemCount() {
-        return weatherForecast.size();
+        return weatherForecast == null ? 0 : weatherForecast.size();
     }
 }

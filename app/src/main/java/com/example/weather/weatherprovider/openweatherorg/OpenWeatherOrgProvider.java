@@ -21,6 +21,8 @@ import android.os.Handler;
 import com.example.weather.weatherprovider.openweatherorg.model.WeatherData;
 import com.google.gson.Gson;
 
+import org.greenrobot.eventbus.EventBus;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -33,30 +35,16 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
     private static final String WEATHER_URL_AFTER_CITY = "&units=metric&appid=";
     private static final String WEATHER_API_KEY = "bb0dbb13a7f84df1ca260fe5fcab1320";
 
-    private WeatherOnUpdateErrorListener errorListener;
-    private WeatherUpdatedListener updateListener;
-
     private final LinkedHashMap<String, WeatherEntity> weathers;
+    private EventBus bus;
 
     public OpenWeatherOrgProvider() {
-        errorListener = null;
-        updateListener = null;
-
+        bus = new EventBus();
         weathers = new LinkedHashMap<>();
-        String[] cities = new String[] {"Moscow", "New York", "Berlin", "Paris", "Prague", "Minsk"};
-        Arrays.sort(cities);
-
-        for ( String key : cities ) {
-            weathers.put(key, null);
-        }
     }
 
-    @Override
-    public String[] getCitiesList() {
-        synchronized (weathers) {
-            String[] cities = new String[weathers.keySet().size()];
-            return weathers.keySet().toArray(cities);
-        }
+    public final EventBus getBus() {
+        return bus;
     }
 
     @Nullable
@@ -81,29 +69,6 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         void onWeatherUpdatedNotify(String city);
     }
 
-    synchronized
-    public void setErrorListener(WeatherOnUpdateErrorListener errorListener) {
-        this.errorListener = errorListener;
-    }
-
-    synchronized
-    public void setUpdateListener(WeatherUpdatedListener updateListener) {
-        this.updateListener = updateListener;
-    }
-
-    synchronized
-    private void onErrorNotify(String error) {
-        if ( errorListener != null ) {
-            errorListener.onErrorOccurredNotify(error);
-        }
-    }
-
-    synchronized
-    private void onWeatherUpdateNotify(String city) {
-        if ( updateListener != null ) {
-            updateListener.onWeatherUpdatedNotify(city);
-        }
-    }
 
     /** Были проблемы с сертификаторм.
      * https://stackoverflow.com/questions/35548162/how-to-bypass-ssl-certificate-validation-in-android-app
@@ -141,11 +106,12 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         }
     }
 
-    private void updateWeatherFor(final String city) {
+    public void updateWeatherFor(final String city) {
         HttpsURLConnection urlConnection = null;
         WeatherEntity updatedWeather = null;
         disableSSLCertificateChecking();
         try {
+            weathers.put(city, null);
             final URL url = new URL(WEATHER_URL_BEFORE_CITY + city + WEATHER_URL_AFTER_CITY + WEATHER_API_KEY);
             urlConnection = (HttpsURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
@@ -160,14 +126,15 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                 updatedWeather = weatherData.toWeatherEntity();
                 synchronized (weathers) {
                     weathers.put(city, updatedWeather);
+                    bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.UPDATE_SUCCESSFUL, city));
                 }
             } else { //City not found or some other error
-                onErrorNotify(weatherData.getErrorMessage());
+                bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CITY_NOT_FOUND_ERROR, city, weatherData.getErrorMessage()));
             }
         } catch (IOException e) {
-            onErrorNotify("Connection error");
+            bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, "Connection error"));
         } catch (Exception e) {
-            onErrorNotify("Internal error");
+            bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, "Internal error"));
         } finally {
             if ( urlConnection != null ) {
                 urlConnection.disconnect();
@@ -184,9 +151,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
 
         for ( String city : cityList ) {
             updateWeatherFor(city);
-            onWeatherUpdateNotify(city);
         }
-        onWeatherUpdateNotify(null);
     }
 
     private String getLines(final BufferedReader reader) throws IOException {

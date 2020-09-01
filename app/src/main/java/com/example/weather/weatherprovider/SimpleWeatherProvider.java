@@ -25,12 +25,6 @@ public class SimpleWeatherProvider implements WeatherProviderInterface {
     }
 
     @Override
-    public String[] getCitiesList() {
-        String[] cities = new String[weathers.keySet().size()];
-        return weathers.keySet().toArray(cities);
-    }
-
-    @Override
     @Nullable
     public WeatherEntity getWeatherFor(String city) {
         return weathers.get(city);

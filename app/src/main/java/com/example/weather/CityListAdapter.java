@@ -30,6 +30,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
 
     private CityWeatherSettings itemRecentlyRemoved;
     private int itemRecentlyRemovedPosition;
+    private boolean itemRecentlyRemovedPositionWasSelected;
 
     private int colorWindowBackground;
     private int colorAccent;
@@ -69,7 +70,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
                 briefTempView.setBackgroundColor(colorWindowBackground);
             }
 
-            cityNameView.setText(weatherSettings.getCurrentCity());
+            cityNameView.setText(weatherSettings.getCity());
 
             String tempUnit = context.getString(R.string.not_avaliable);
 
@@ -187,6 +188,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
         findColors();
         itemRecentlyRemoved = null;
         itemRecentlyRemovedPosition = -1;
+        itemRecentlyRemovedPositionWasSelected = false;
     }
 
     /**
@@ -260,6 +262,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
     public void deleteItem(int position) {
         itemRecentlyRemoved = mWeatherSet.get(position);
         itemRecentlyRemovedPosition = position;
+        itemRecentlyRemovedPositionWasSelected = position == checkedPosition;
         mWeatherSet.remove(position);
         notifyItemRemoved(position);
         notifyAboutUndoOperation();
@@ -292,7 +295,11 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
             mWeatherSet.add(itemRecentlyRemovedPosition,
                     itemRecentlyRemoved);
             notifyItemInserted(itemRecentlyRemovedPosition);
+            if ( itemRecentlyRemovedPositionWasSelected ) {
+                //setSelectedItemIndex(itemRecentlyRemovedPosition);
+            }
             itemRecentlyRemovedPosition = -1;
+            itemRecentlyRemovedPositionWasSelected = false;
             itemRecentlyRemoved = null;
         }
     }
