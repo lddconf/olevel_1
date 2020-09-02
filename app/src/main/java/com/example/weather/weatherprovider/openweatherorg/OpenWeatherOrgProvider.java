@@ -17,6 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Locale;
 
 import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.WeatherData;
 import com.example.weather.weatherprovider.openweatherorg.findWeatherModel.FindData;
@@ -100,13 +101,17 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         }
     }
 
-    public void findForecastFor(final String keywords) {
+    public void findForecastFor(String keywords) {
         HttpsURLConnection urlConnection = null;
         WeatherEntity updatedWeather = null;
         disableSSLCertificateChecking();
         try {
+            String reqKey = keywords;
+            if ( keywords.length() < 3 ) {
+                reqKey = String.format(Locale.getDefault(),"%-3.3s", keywords);
+            }
             final URL url = new URL(WEATHER_URL_BEFORE_FIND_REQUEST
-                    + keywords + WEATHER_URL_AFTER_CITY
+                    + reqKey + WEATHER_URL_AFTER_CITY
                     + WEATHER_API_KEY );
             urlConnection = (HttpsURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
