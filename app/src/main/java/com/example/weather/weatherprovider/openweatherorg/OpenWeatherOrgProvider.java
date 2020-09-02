@@ -3,6 +3,7 @@ package com.example.weather.weatherprovider.openweatherorg;
 import androidx.annotation.Nullable;
 
 import com.example.weather.CityID;
+import com.example.weather.R;
 import com.example.weather.weather.WeatherEntity;
 import com.example.weather.weatherprovider.WeatherProviderInterface;
 
@@ -209,5 +210,39 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
             }
         } while (line != null);
         return builder.toString();
+    }
+
+    public static int convertWeatherImageID2Custom(String oweatherID) {
+        switch (oweatherID) {
+            case "01d":
+                return R.mipmap.ic_clear_sky_day;
+            case "01n":
+                return R.mipmap.ic_clear_sky_night;
+            case "02d":
+                return R.mipmap.ic_few_clouds_day;
+            case "02n":
+                return R.mipmap.ic_few_clouds_night;
+            case "03d":
+            case "03n":
+                return R.mipmap.ic_scattered_clouds_d_n;
+            case "04d":
+            case "04n":
+                return R.mipmap.ic_broken_clouds_d_n;
+            case "09d":
+            case "09n":
+                return R.mipmap.ic_rain_d_n;
+            case "10d":
+                return R.mipmap.ic_rain_day;
+            case "10n":
+                return R.mipmap.ic_rain_night;
+            case "11d":
+            case "11n":
+                return R.mipmap.ic_thunder_strom;
+            case "13d":
+            case "13n":
+                return R.mipmap.ic_snow_d_n;
+            default:
+                return R.mipmap.ic_weather_na;
+        }
     }
 }

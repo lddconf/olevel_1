@@ -268,13 +268,9 @@ public class WeatherDisplayFragment extends Fragment {
     private void updateWeatherView() {
 
         if ( settings.getWeather() != null ) {
-            if ( settings.getWeather().getCloudiness().equals(requireContext().getString(R.string.cloudy))) {
-                weatherView.setImageResource(R.mipmap.ic_cloudly);
-            } else {
-                weatherView.setImageDrawable(null);
-            }
+            weatherView.setImageResource(settings.getWeather().getIconID());
         } else {
-            weatherView.setImageDrawable(null);
+            weatherView.setImageResource(R.mipmap.ic_weather_na);
         }
     }
 

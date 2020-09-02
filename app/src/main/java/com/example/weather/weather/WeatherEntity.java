@@ -1,5 +1,7 @@
 package com.example.weather.weather;
 
+import com.example.weather.R;
+
 import java.io.Serializable;
 
 public class WeatherEntity implements Serializable {
@@ -9,18 +11,20 @@ public class WeatherEntity implements Serializable {
     private int pressureBar;
     private String cloudiness;
     private boolean isFahrenheit;
+    private int iconID;
 
     public WeatherEntity() {
-        this((int)(Math.random() * 40), (int)(Math.random() * 40), (Math.random() * 10), 765 - (int)(Math.random()*10), "cloudy", false);
+        this((int)(Math.random() * 40), (int)(Math.random() * 40), (Math.random() * 10), 765 - (int)(Math.random()*10), "cloudy", false, R.mipmap.ic_weather_na);
     }
 
-    public WeatherEntity(int temperature, int feelsLike, double windSpeed, int pressureBar, String cloudiness, boolean isFahrenheit) {
+    public WeatherEntity(int temperature, int feelsLike, double windSpeed, int pressureBar, String cloudiness, boolean isFahrenheit, int icon_id) {
         this.temperature = temperature;
         this.feelsLike = feelsLike;
         this.windSpeed = windSpeed;
         this.pressureBar = pressureBar;
         this.cloudiness = cloudiness;
         this.isFahrenheit = isFahrenheit;
+        this.iconID = icon_id;
     }
 
     public WeatherEntity(WeatherEntity entity) {
@@ -38,7 +42,7 @@ public class WeatherEntity implements Serializable {
         } else {
             float inFahrenheitTemp = Math.round(getTemperature()*1.8f + 32f);
             float inFahrenheitFeelsLike = Math.round(getFeelsLikeTemp()*1.8f + 32f);
-            return new WeatherEntity((int)inFahrenheitTemp, (int)inFahrenheitFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), true);
+            return new WeatherEntity((int)inFahrenheitTemp, (int)inFahrenheitFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), true, getIconID());
         }
     }
 
@@ -48,7 +52,7 @@ public class WeatherEntity implements Serializable {
         } else {
             float inCelsiusTemp = Math.round((getTemperature() - 32f) / 1.8f);
             float inCelsiusFeelsLike = Math.round((getTemperature() - 32f) / 1.8f);
-            return new WeatherEntity((int)inCelsiusTemp, (int)inCelsiusFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), false);
+            return new WeatherEntity((int)inCelsiusTemp, (int)inCelsiusFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), false, getIconID());
         }
     }
 
@@ -95,5 +99,9 @@ public class WeatherEntity implements Serializable {
 
     public boolean isFahrenheitTempUnit() {
         return isFahrenheit;
+    }
+
+    public int getIconID() {
+        return iconID;
     }
 }
