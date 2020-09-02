@@ -1,4 +1,4 @@
-package com.example.weather.weatherprovider.openweatherorg.model;
+package com.example.weather.weatherprovider.openweatherorg.currentWeatherModel;
 
 import com.example.weather.weather.WeatherEntity;
 

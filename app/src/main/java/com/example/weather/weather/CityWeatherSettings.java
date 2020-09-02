@@ -3,6 +3,7 @@ package com.example.weather.weather;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.weather.UserSettings;
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.io.Serializable;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 
 public class CityWeatherSettings implements Serializable {
     private WeatherEntity currentWeather;
-    private String currentCity;
+    private UserSettings.CityID currentCity;
 
     private ArrayList<WeatherEntity> weekForecast;
 
@@ -20,11 +21,11 @@ public class CityWeatherSettings implements Serializable {
      * Default constructor for serializable/deserializable objects
      */
     public CityWeatherSettings() {
-        this("Moscow", new WeatherEntity(), new WeatherDisplayOptions() );
+        this(new UserSettings.CityID("Moscow", "RU", 524901), new WeatherEntity(), new WeatherDisplayOptions() );
     }
 
 
-    public CityWeatherSettings(String city, WeatherEntity weather, WeatherDisplayOptions options) {
+    public CityWeatherSettings(UserSettings.CityID city, WeatherEntity weather, WeatherDisplayOptions options) {
         this.currentCity = city;
         this.currentWeather = weather;
 
@@ -42,7 +43,7 @@ public class CityWeatherSettings implements Serializable {
      * Setup new city
      * @param city name of specified location
      */
-    public void setCurrentCity(String city) {
+    public void setCurrentCity(UserSettings.CityID city) {
         this.currentCity = city;
     }
 
@@ -50,7 +51,7 @@ public class CityWeatherSettings implements Serializable {
      * Get current city
      * @return current city
      */
-    public String getCity() {
+    public UserSettings.CityID getCity() {
         return currentCity;
     }
 

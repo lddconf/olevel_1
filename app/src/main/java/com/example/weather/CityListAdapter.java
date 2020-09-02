@@ -70,7 +70,7 @@ public class CityListAdapter extends RecyclerView.Adapter<CityListAdapter.CityVi
                 briefTempView.setBackgroundColor(colorWindowBackground);
             }
 
-            cityNameView.setText(weatherSettings.getCity());
+            cityNameView.setText(weatherSettings.getCity().getName());
 
             String tempUnit = context.getString(R.string.not_avaliable);
 

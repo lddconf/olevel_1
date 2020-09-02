@@ -1,19 +1,21 @@
 package com.example.weather.weatherprovider.openweatherorg;
 
+import com.example.weather.UserSettings;
+
 public class OpenWeatherProviderEvent {
     OWeatherResult resultCode;
-    String         city;
+    UserSettings.CityID city;
     String         errorDescription;
 
     public enum OWeatherResult {
-        UPDATE_SUCCESSFUL, CONNECTION_ERROR, CITY_NOT_FOUND_ERROR;
+        REQUEST_COMPLETED, CONNECTION_ERROR;
     }
 
-    public OpenWeatherProviderEvent( OWeatherResult code, String city ) {
+    public OpenWeatherProviderEvent( OWeatherResult code, UserSettings.CityID city ) {
         this(code, city, null);
     }
 
-    public OpenWeatherProviderEvent(OWeatherResult resultCode, String city, String errorDescription) {
+    public OpenWeatherProviderEvent(OWeatherResult resultCode, UserSettings.CityID city, String errorDescription) {
         this.resultCode = resultCode;
         this.city = city;
         this.errorDescription = errorDescription;
@@ -23,7 +25,7 @@ public class OpenWeatherProviderEvent {
         return resultCode;
     }
 
-    public String getCity() {
+    public UserSettings.CityID getCity() {
         return city;
     }
 

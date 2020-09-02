@@ -176,8 +176,8 @@ public class WeatherDisplayFragment extends Fragment {
     }
 
     private void updateCurrentCity() {
-        if ( settings.getCity() != null && settings.getCity().length() > 0) {
-            cityView.setText(settings.getCity());
+        if ( settings.getCity() != null && settings.getCity().getName().length() > 0) {
+            cityView.setText(settings.getCity().getName());
         } else {
             cityView.setText(R.string.not_avaliable);
         }

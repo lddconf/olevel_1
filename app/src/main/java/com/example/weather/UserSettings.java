@@ -1,26 +1,51 @@
 package com.example.weather;
 
+import androidx.annotation.Nullable;
+
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 public class UserSettings {
-    private String currentPlace;
-    private LinkedHashSet<String> otherPlaces;
+    private CityID currentPlace;
+    private LinkedHashSet<CityID> otherPlaces;
     private String username;
     private int avatarID;
     private WeatherDisplayOptions options;
 
     private static UserSettings settings;
 
+    public static class CityID {
+        private String name;
+        private String country;
+        private int id;
+
+        public CityID(String name, String country, int id) {
+            this.name = name;
+            this.country = country;
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getCountry() {
+            return country;
+        }
+    };
+
     private UserSettings() {
-        currentPlace = "Moscow";
+        currentPlace = new CityID("Moscow", "RU", 524901);
         otherPlaces = new LinkedHashSet<>();
 
-        String[] cities = new String[] {"New York", "Berlin", "Paris", "Prague", "Minsk"};
-
-        otherPlaces.addAll(Arrays.asList(cities));
+        otherPlaces.add(new CityID("New York", "US", 5128638));
+        otherPlaces.add(new CityID("Berlin", "DE", 2950159));
 
         username = "User";
         avatarID = R.mipmap.ic_launcher_round;
@@ -36,12 +61,12 @@ public class UserSettings {
         return settings;
     }
 
-    public String getCurrentPlace() {
+    public CityID getCurrentPlace() {
         return currentPlace;
     }
 
-    public String[] getOtherPacesList() {
-        String[] result = new String[otherPlaces.size()];
+    public CityID[] getOtherPacesList() {
+        CityID[] result = new CityID[otherPlaces.size()];
         otherPlaces.toArray(result);
         return result;
     }
@@ -58,7 +83,7 @@ public class UserSettings {
         return options;
     }
 
-    public void setCurrentPlace(String currentPlace) {
+    public void setCurrentPlace(CityID currentPlace) {
         this.currentPlace = currentPlace;
     }
 
@@ -74,12 +99,12 @@ public class UserSettings {
         otherPlaces.clear();
     }
 
-    public void addOtherPlaces(String[] places ) {
+    public void addOtherPlaces(CityID[] places ) {
         this.otherPlaces.addAll(Arrays.asList(places));
 
     }
 
-    public void removeOtherPlaces(String[] places ) {
+    public void removeOtherPlaces(CityID[] places ) {
         this.otherPlaces.removeAll(Arrays.asList(places));
         if ( !this.otherPlaces.contains(currentPlace) ) {
             currentPlace = null;
