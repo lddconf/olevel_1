@@ -4,19 +4,13 @@
     <item
         android:id="@+id/actionFindLocation"
         compat:showAsAction="ifRoom"
-        android:icon="@android:drawable/ic_menu_mylocation"
+        android:icon="@drawable/ic_baseline_my_location_24"
         android:title="@string/locate_label">
     </item>
     <item
-        android:id="@+id/actionSettings"
+        android:id="@+id/actionAdd"
         compat:showAsAction="ifRoom"
-        android:icon="@android:drawable/ic_menu_edit"
-        android:title="@string/settings_label">
-    </item>
-    <item
-        android:id="@+id/actionAbout"
-        compat:showAsAction="ifRoom"
-        android:icon="@android:drawable/ic_menu_help"
-        android:title="@string/about_label">
+        android:icon="@drawable/ic_baseline_add_location_24"
+        android:title="@string/add_new_place_action_label">
     </item>
 </menu>

@@ -27,6 +27,7 @@ public class WeatherDisplayOptionsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         settings = new WeatherDisplayOptions();
+        setRetainInstance(true);
         if ( getArguments() != null ) {
             WeatherDisplayOptions options = (WeatherDisplayOptions)getArguments().getSerializable(DisplayOptionsKey);
             if ( options != null ) {
@@ -145,12 +146,15 @@ public class WeatherDisplayOptionsFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         //Реализация сделана по условиям ДЗ. Понятно, что фактически, ничего специально сохранять не надо
-        settings.setShowFeelsLike(showFeelsLike.isChecked());
-        settings.setShowPressure(showPressure.isChecked());
-        settings.setShowWindSpeed(showWindSwitch.isChecked());
-        settings.setTemperatureUnit(temperatureUnit.isChecked());
+        if ( settings != null ) {
+            settings.setShowPressure(showPressure.isChecked());
+            settings.setShowWindSpeed(showWindSwitch.isChecked());
+            settings.setTemperatureUnit(temperatureUnit.isChecked());
+            settings.setShowFeelsLike(showFeelsLike.isChecked());
+            outState.putSerializable(DisplayOptionsKey, settings);
+        }
 
-        outState.putSerializable(DisplayOptionsKey, settings);
+
         super.onSaveInstanceState(outState);
     }
 }
