@@ -1,7 +1,5 @@
 package com.example.weather;
 
-import androidx.annotation.Nullable;
-
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.util.Arrays;
@@ -16,29 +14,6 @@ public class UserSettings {
 
     private static UserSettings settings;
 
-    public static class CityID {
-        private String name;
-        private String country;
-        private int id;
-
-        public CityID(String name, String country, int id) {
-            this.name = name;
-            this.country = country;
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getCountry() {
-            return country;
-        }
-    };
 
     private UserSettings() {
         currentPlace = new CityID("Moscow", "RU", 524901);

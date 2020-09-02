@@ -1,13 +1,13 @@
 package com.example.weather;
 
 public class SearchEngineCitySelectedEvent {
-    private UserSettings.CityID cityID;
+    private CityID cityID;
 
-    public SearchEngineCitySelectedEvent(UserSettings.CityID cityID) {
+    public SearchEngineCitySelectedEvent(CityID cityID) {
         this.cityID = cityID;
     }
 
-    public UserSettings.CityID getCityID() {
+    public CityID getCityID() {
         return cityID;
     }
 }

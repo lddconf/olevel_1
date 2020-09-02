@@ -2,7 +2,7 @@ package com.example.weather.weatherprovider.openweatherorg;
 
 import androidx.annotation.Nullable;
 
-import com.example.weather.UserSettings;
+import com.example.weather.CityID;
 import com.example.weather.weather.WeatherEntity;
 import com.example.weather.weatherprovider.WeatherProviderInterface;
 
@@ -38,7 +38,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
     private static final String WEATHER_URL_AFTER_CITY = "&units=metric&appid=";
     private static final String WEATHER_API_KEY = "bb0dbb13a7f84df1ca260fe5fcab1320";
 
-    private final LinkedHashMap<UserSettings.CityID, WeatherEntity> weathers;
+    private final LinkedHashMap<CityID, WeatherEntity> weathers;
     private final EventBus bus;
 
     public OpenWeatherOrgProvider() {
@@ -52,7 +52,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
 
     @Nullable
     @Override
-    public WeatherEntity getWeatherFor(UserSettings.CityID city) {
+    public WeatherEntity getWeatherFor(CityID city) {
         synchronized (weathers) {
             return weathers.get(city);
         }
@@ -60,7 +60,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
 
     @Nullable
     @Override
-    public ArrayList<WeatherEntity> getWeatherWeekForecastFor(UserSettings.CityID city) {
+    public ArrayList<WeatherEntity> getWeatherWeekForecastFor(CityID city) {
         return new ArrayList<>();
     }
 
@@ -142,7 +142,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         }
     }
 
-    public void updateWeatherFor(final UserSettings.CityID city) {
+    public void updateWeatherFor(final CityID city) {
         HttpsURLConnection urlConnection = null;
         WeatherEntity updatedWeather = null;
         disableSSLCertificateChecking();
@@ -183,13 +183,13 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
     }
 
     public void updateWeatherList() {
-        UserSettings.CityID[] cityList;
+        CityID[] cityList;
         synchronized (weathers) {
-            cityList = new UserSettings.CityID[weathers.keySet().size()];
+            cityList = new CityID[weathers.keySet().size()];
             weathers.keySet().toArray(cityList);
         }
 
-        for ( UserSettings.CityID city : cityList ) {
+        for ( CityID city : cityList ) {
             updateWeatherFor(city);
         }
     }

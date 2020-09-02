@@ -19,12 +19,12 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
 import com.example.weather.weather.CityWeatherSettings;
 import com.example.weather.weather.WeatherDisplayFragment;
+import com.example.weather.weather.WeatherEntity;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherProviderEvent;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherSearchResultEvent;
@@ -303,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
             //Add new city
             if ( !currentCityWeather.getCity().equals( event.getCityID()) ) {
                 mCityWeatherList.add(0, currentCityWeather);
-                currentCityWeather = new CityWeatherSettings( event.getCityID(), null, userSettings.getOptions());
+                currentCityWeather = new CityWeatherSettings( event.getCityID(), new WeatherEntity(), userSettings.getOptions());
                 refreshWeatherDataFor(currentCityWeather.getCity());
                 navViewDisplayCity();
             }
@@ -356,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void refreshWeatherDataFor(UserSettings.CityID city) {
+    private void refreshWeatherDataFor(CityID city) {
         //Request new weather data from internet
         new Thread(new Runnable() {
             @Override
@@ -390,10 +390,10 @@ public class MainActivity extends AppCompatActivity {
                     weatherProvider.getWeatherFor(userSettings.getCurrentPlace()),
                     userSettings.getOptions());
 
-        UserSettings.CityID[] otherPlaces = userSettings.getOtherPacesList();
+        CityID[] otherPlaces = userSettings.getOtherPacesList();
         mCityWeatherList = new ArrayList<>(otherPlaces.length);
 
-        for ( UserSettings.CityID city: otherPlaces ) {
+        for ( CityID city: otherPlaces ) {
             CityWeatherSettings cs = new CityWeatherSettings(city, weatherProvider.getWeatherFor(city), userSettings.getOptions());
             cs.addWeekForecastWeather(weatherProvider.getWeatherWeekForecastFor(city));
             mCityWeatherList.add(cs);
@@ -495,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
         //Store all current places in user settings
         userSettings.setCurrentPlace(currentCityWeather.getCity());
 
-        UserSettings.CityID[] otherPlaces = new UserSettings.CityID[mCityWeatherList.size()];
+        CityID[] otherPlaces = new CityID[mCityWeatherList.size()];
 
         int i = 0;
         for ( CityWeatherSettings w: mCityWeatherList ) {

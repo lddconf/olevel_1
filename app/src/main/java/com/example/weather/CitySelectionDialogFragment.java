@@ -76,7 +76,7 @@ public class CitySelectionDialogFragment extends BottomSheetDialogFragment {
     }
 
     public interface OnCitySelectedListener {
-        void onCitySelected( UserSettings.CityID cityID );
+        void onCitySelected( CityID cityID );
     }
 
     private void setupSearchDetails() {
@@ -95,7 +95,7 @@ public class CitySelectionDialogFragment extends BottomSheetDialogFragment {
 
         adapter.setOnCitySelectedCallBack(new OnCitySelectedListener() {
             @Override
-            public void onCitySelected(UserSettings.CityID cityID) {
+            public void onCitySelected(CityID cityID) {
                 WeatherAppBus.getBus().post( new SearchEngineCitySelectedEvent( cityID ));
                 dismiss();
             }

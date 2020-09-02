@@ -104,7 +104,7 @@ public class CitySelectionFragment extends Fragment {
      * @return Selected city
      */
     @Nullable
-    public UserSettings.CityID getSelectedCity() {
+    public CityID getSelectedCity() {
         if ( adapter.getSelectedItemIndex() >= 0 ) {
             return weatherSettingsArrayList.get(adapter.getSelectedItemIndex()).getCity();
         }

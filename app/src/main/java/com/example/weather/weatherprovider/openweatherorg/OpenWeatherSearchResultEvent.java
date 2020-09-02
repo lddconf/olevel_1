@@ -1,6 +1,6 @@
 package com.example.weather.weatherprovider.openweatherorg;
 
-import com.example.weather.UserSettings;
+import com.example.weather.CityID;
 import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.Coord;
 
 import java.io.Serializable;
@@ -13,11 +13,11 @@ public class OpenWeatherSearchResultEvent {
     String errorDescription;
 
     public static class WeatherSearchDetails implements Serializable {
-        private UserSettings.CityID cityID;
+        private CityID cityID;
         private Coord coord;
 
         public WeatherSearchDetails(int id, String name, Coord coord, String country) {
-            cityID = new UserSettings.CityID(name, country, id);
+            cityID = new CityID(name, country, id);
             this.coord = coord;
         }
 
@@ -37,7 +37,7 @@ public class OpenWeatherSearchResultEvent {
             return cityID.getCountry();
         }
 
-        public UserSettings.CityID getCityID() {
+        public CityID getCityID() {
             return cityID;
         }
     }
