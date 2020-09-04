@@ -188,7 +188,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         }
     }
 
-    public void updateWeatherList() {
+    public void refreshWeatherList() {
         CityID[] cityList;
         synchronized (weathers) {
             cityList = new CityID[weathers.keySet().size()];

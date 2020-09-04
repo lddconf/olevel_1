@@ -6,11 +6,11 @@ import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.Co
 import java.io.Serializable;
 import java.util.LinkedList;
 
-public class OpenWeatherSearchResultEvent {
-    OpenWeatherProviderEvent.OWeatherResult resultCode;
-    LinkedList<WeatherSearchDetails> searchDetails;
-    String keyword;
-    String errorDescription;
+public class OpenWeatherSearchResultEvent implements Serializable {
+    private OpenWeatherProviderEvent.OWeatherResult resultCode;
+    private LinkedList<WeatherSearchDetails> searchDetails;
+    private String keyword;
+    private String errorDescription;
 
     public static class WeatherSearchDetails implements Serializable {
         private CityID cityID;

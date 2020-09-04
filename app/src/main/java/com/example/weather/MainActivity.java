@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 synchronized (weatherProvider) {
-                    weatherProvider.updateWeatherList();
+                    weatherProvider.refreshWeatherList();
                 }
             }
         }).start();
