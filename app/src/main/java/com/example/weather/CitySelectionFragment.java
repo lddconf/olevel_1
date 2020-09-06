@@ -104,9 +104,9 @@ public class CitySelectionFragment extends Fragment {
      * @return Selected city
      */
     @Nullable
-    public String getSelectedCity() {
+    public CityID getSelectedCity() {
         if ( adapter.getSelectedItemIndex() >= 0 ) {
-            return weatherSettingsArrayList.get(adapter.getSelectedItemIndex()).getCurrentCity();
+            return weatherSettingsArrayList.get(adapter.getSelectedItemIndex()).getCity();
         }
         return null;
     }
@@ -116,7 +116,6 @@ public class CitySelectionFragment extends Fragment {
      * @param index selected index
      */
     public void setItemSelected(int index) {
-
         if ( index >= 0 ) {
             cityList.scrollToPosition(index);
         }

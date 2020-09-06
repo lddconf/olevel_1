@@ -2,6 +2,8 @@ package com.example.weather.weatherprovider.openweatherorg;
 
 import androidx.annotation.Nullable;
 
+import com.example.weather.CityID;
+import com.example.weather.R;
 import com.example.weather.weather.WeatherEntity;
 import com.example.weather.weatherprovider.WeatherProviderInterface;
 
@@ -14,12 +16,16 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import android.os.Handler;
+import java.util.LinkedList;
+import java.util.Locale;
 
-import com.example.weather.weatherprovider.openweatherorg.model.WeatherData;
+import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.WeatherData;
+import com.example.weather.weatherprovider.openweatherorg.findWeatherModel.FindData;
+import com.example.weather.weatherprovider.openweatherorg.findWeatherModel.FindWeatherData;
 import com.google.gson.Gson;
+
+import org.greenrobot.eventbus.EventBus;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -29,39 +35,26 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class OpenWeatherOrgProvider implements WeatherProviderInterface {
-    private static final String WEATHER_URL_BEFORE_CITY = "https://api.openweathermap.org/data/2.5/weather?q=";
+    private static final String WEATHER_URL_BEFORE_CURRENT_WEATHER_REQUEST = "https://api.openweathermap.org/data/2.5/weather?id=";
+    private static final String WEATHER_URL_BEFORE_FIND_REQUEST = "https://api.openweathermap.org/data/2.5/find?q=";
     private static final String WEATHER_URL_AFTER_CITY = "&units=metric&appid=";
     private static final String WEATHER_API_KEY = "bb0dbb13a7f84df1ca260fe5fcab1320";
 
-    private WeatherOnUpdateErrorListener errorListener;
-    private WeatherUpdatedListener updateListener;
-
-    private final LinkedHashMap<String, WeatherEntity> weathers;
+    private final LinkedHashMap<CityID, WeatherEntity> weathers;
+    private final EventBus bus;
 
     public OpenWeatherOrgProvider() {
-        errorListener = null;
-        updateListener = null;
-
+        bus = new EventBus();
         weathers = new LinkedHashMap<>();
-        String[] cities = new String[] {"Moscow", "New York", "Berlin", "Paris", "Prague", "Minsk"};
-        Arrays.sort(cities);
-
-        for ( String key : cities ) {
-            weathers.put(key, null);
-        }
     }
 
-    @Override
-    public String[] getCitiesList() {
-        synchronized (weathers) {
-            String[] cities = new String[weathers.keySet().size()];
-            return weathers.keySet().toArray(cities);
-        }
+    public final EventBus getBus() {
+        return bus;
     }
 
     @Nullable
     @Override
-    public WeatherEntity getWeatherFor(String city) {
+    public WeatherEntity getWeatherFor(CityID city) {
         synchronized (weathers) {
             return weathers.get(city);
         }
@@ -69,40 +62,8 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
 
     @Nullable
     @Override
-    public ArrayList<WeatherEntity> getWeatherWeekForecastFor(String city) {
+    public ArrayList<WeatherEntity> getWeatherWeekForecastFor(CityID city) {
         return new ArrayList<>();
-    }
-
-    public interface WeatherOnUpdateErrorListener {
-        void onErrorOccurredNotify(String error);
-    }
-
-    public interface WeatherUpdatedListener {
-        void onWeatherUpdatedNotify(String city);
-    }
-
-    synchronized
-    public void setErrorListener(WeatherOnUpdateErrorListener errorListener) {
-        this.errorListener = errorListener;
-    }
-
-    synchronized
-    public void setUpdateListener(WeatherUpdatedListener updateListener) {
-        this.updateListener = updateListener;
-    }
-
-    synchronized
-    private void onErrorNotify(String error) {
-        if ( errorListener != null ) {
-            errorListener.onErrorOccurredNotify(error);
-        }
-    }
-
-    synchronized
-    private void onWeatherUpdateNotify(String city) {
-        if ( updateListener != null ) {
-            updateListener.onWeatherUpdatedNotify(city);
-        }
     }
 
     /** Были проблемы с сертификаторм.
@@ -141,12 +102,63 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         }
     }
 
-    private void updateWeatherFor(final String city) {
+    public void findForecastFor(String keywords) {
         HttpsURLConnection urlConnection = null;
         WeatherEntity updatedWeather = null;
         disableSSLCertificateChecking();
         try {
-            final URL url = new URL(WEATHER_URL_BEFORE_CITY + city + WEATHER_URL_AFTER_CITY + WEATHER_API_KEY);
+            String reqKey = keywords;
+            if ( keywords.length() < 3 ) {
+                reqKey = String.format(Locale.getDefault(),"%-3.3s", keywords);
+            }
+            final URL url = new URL(WEATHER_URL_BEFORE_FIND_REQUEST
+                    + reqKey + WEATHER_URL_AFTER_CITY
+                    + WEATHER_API_KEY );
+            urlConnection = (HttpsURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setReadTimeout(1000);
+            BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+
+            String jsonData = getLines(in);
+            Gson gson = new Gson();
+            final FindData findData = gson.fromJson(jsonData, FindData.class);
+
+            if ( findData.getCod() == 200 ) { //Request completed
+                //Build found list
+                LinkedList<OpenWeatherSearchResultEvent.WeatherSearchDetails> found = new LinkedList<>();
+                for ( FindWeatherData wd : findData.getList() ) {
+                    found.add(new OpenWeatherSearchResultEvent.WeatherSearchDetails(wd.getId(),
+                            wd.getName(),
+                            wd.getCoord(),
+                            wd.getSys().getCountry()));
+                }
+                bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED,
+                        found, keywords));
+            } else { //City not found or some other error
+                bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, findData.getMessage(), keywords));
+            }
+        } catch (IOException e) {
+            bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, "Connection error", keywords));
+        } catch (Exception e) {
+            bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, "Internal error", keywords));
+        } finally {
+            if ( urlConnection != null ) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
+    public void updateWeatherFor(final CityID city) {
+        HttpsURLConnection urlConnection = null;
+        WeatherEntity updatedWeather = null;
+        disableSSLCertificateChecking();
+        try {
+            synchronized (weathers) {
+                weathers.put(city, null);
+            }
+            final URL url = new URL(WEATHER_URL_BEFORE_CURRENT_WEATHER_REQUEST
+                    + city.getId() + WEATHER_URL_AFTER_CITY
+                    + WEATHER_API_KEY );
             urlConnection = (HttpsURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.setReadTimeout(1000);
@@ -160,14 +172,15 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                 updatedWeather = weatherData.toWeatherEntity();
                 synchronized (weathers) {
                     weathers.put(city, updatedWeather);
+                    bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
                 }
             } else { //City not found or some other error
-                onErrorNotify(weatherData.getErrorMessage());
+                bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, weatherData.getErrorMessage()));
             }
         } catch (IOException e) {
-            onErrorNotify("Connection error");
+            bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, "Connection error"));
         } catch (Exception e) {
-            onErrorNotify("Internal error");
+            bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, "Internal error"));
         } finally {
             if ( urlConnection != null ) {
                 urlConnection.disconnect();
@@ -176,17 +189,15 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
     }
 
     public void updateWeatherList() {
-        String[] cityList;
+        CityID[] cityList;
         synchronized (weathers) {
-            cityList = new String[weathers.keySet().size()];
+            cityList = new CityID[weathers.keySet().size()];
             weathers.keySet().toArray(cityList);
         }
 
-        for ( String city : cityList ) {
+        for ( CityID city : cityList ) {
             updateWeatherFor(city);
-            onWeatherUpdateNotify(city);
         }
-        onWeatherUpdateNotify(null);
     }
 
     private String getLines(final BufferedReader reader) throws IOException {
@@ -199,5 +210,39 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
             }
         } while (line != null);
         return builder.toString();
+    }
+
+    public static int convertWeatherImageID2Custom(String oweatherID) {
+        switch (oweatherID) {
+            case "01d":
+                return R.mipmap.ic_clear_sky_day;
+            case "01n":
+                return R.mipmap.ic_clear_sky_night;
+            case "02d":
+                return R.mipmap.ic_few_clouds_day;
+            case "02n":
+                return R.mipmap.ic_few_clouds_night;
+            case "03d":
+            case "03n":
+                return R.mipmap.ic_scattered_clouds_d_n;
+            case "04d":
+            case "04n":
+                return R.mipmap.ic_broken_clouds_d_n;
+            case "09d":
+            case "09n":
+                return R.mipmap.ic_rain_d_n;
+            case "10d":
+                return R.mipmap.ic_rain_day;
+            case "10n":
+                return R.mipmap.ic_rain_night;
+            case "11d":
+            case "11n":
+                return R.mipmap.ic_thunder_strom;
+            case "13d":
+            case "13n":
+                return R.mipmap.ic_snow_d_n;
+            default:
+                return R.mipmap.ic_weather_na;
+        }
     }
 }

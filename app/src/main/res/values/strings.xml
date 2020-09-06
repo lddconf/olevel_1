@@ -76,5 +76,8 @@
     <string name="nav_other_places">Other places</string>
     <string name="nav_current_city">Current city</string>
     <string name="add_new_place_action_label">Add new place</string>
+    <string name="display_weather_frame_current_place">Current place</string>
+    <string name="refresh_label">Refresh</string>
+    <string name="find_city_title">Search for city</string>
 
 </resources>

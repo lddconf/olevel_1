@@ -3,6 +3,7 @@ package com.example.weather.weather;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.weather.CityID;
 import com.example.weather.diplayoption.WeatherDisplayOptions;
 
 import java.io.Serializable;
@@ -10,8 +11,7 @@ import java.util.ArrayList;
 
 public class CityWeatherSettings implements Serializable {
     private WeatherEntity currentWeather;
-    private String currentCity;
-
+    private CityID currentCity;
     private ArrayList<WeatherEntity> weekForecast;
 
     private WeatherDisplayOptions displayOptions;
@@ -20,18 +20,21 @@ public class CityWeatherSettings implements Serializable {
      * Default constructor for serializable/deserializable objects
      */
     public CityWeatherSettings() {
-        this("Moscow", new WeatherEntity(), new WeatherDisplayOptions() );
+        this(new CityID("Moscow", "RU", 524901), new WeatherEntity(), new WeatherDisplayOptions() );
     }
 
 
-    public CityWeatherSettings(String city, WeatherEntity weather, WeatherDisplayOptions options) {
+    public CityWeatherSettings(CityID city, WeatherEntity weather, WeatherDisplayOptions options) {
         this.currentCity = city;
         this.currentWeather = weather;
-        weekForecast = new ArrayList<>(14);
+
+        weekForecast = null;
+/*
+                new ArrayList<>(14);
         for (int i = 0; i < 14; i++) {
             weekForecast.add( new WeatherEntity());
         }
-
+*/
         setWeatherDisplayOptions(options);
     }
 
@@ -39,7 +42,7 @@ public class CityWeatherSettings implements Serializable {
      * Setup new city
      * @param city name of specified location
      */
-    public void setCurrentCity(String city) {
+    public void setCurrentCity(CityID city) {
         this.currentCity = city;
     }
 
@@ -47,7 +50,7 @@ public class CityWeatherSettings implements Serializable {
      * Get current city
      * @return current city
      */
-    public String getCurrentCity() {
+    public CityID getCity() {
         return currentCity;
     }
 
@@ -89,8 +92,10 @@ public class CityWeatherSettings implements Serializable {
      * Apply weather settings
      */
     private void applyWeekForecastOptions() {
-        for (int i = 0; i < weekForecast.size(); i++) {
-            weekForecast.set(i, formatWeatherWithOptions(weekForecast.get(i), displayOptions));
+        if ( weekForecast != null ) {
+            for (int i = 0; i < weekForecast.size(); i++) {
+                weekForecast.set(i, formatWeatherWithOptions(weekForecast.get(i), displayOptions));
+            }
         }
     }
 
