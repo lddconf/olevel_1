@@ -12,8 +12,14 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.ui.AppBarConfiguration;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,14 +31,13 @@ import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
 import com.example.weather.weather.CityWeatherSettings;
 import com.example.weather.weather.WeatherDisplayFragment;
 import com.example.weather.weather.WeatherEntity;
-import com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider;
+import com.example.weather.weatherprovider.OpenWeatherOrgService;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherProviderEvent;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherSearchResultEvent;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout drawer;
 
     private int lastSelectedSection;
-    private boolean silentCityIndexSet = false;
-
     private View layout;
 
     private static final String mainActivityCityListKey = "AppMainActivityCityListKey";
@@ -68,10 +71,29 @@ public class MainActivity extends AppCompatActivity {
     private static final int settingsChangedRequestCode = 0x1;
     private static final boolean debug = false;
 
-    private final static OpenWeatherOrgProvider weatherProvider = new OpenWeatherOrgProvider();
     private UserSettings userSettings;
     private CitySearchDialog searchDialog;
-    private Handler handler;
+
+    private boolean isBinded = false;
+    private OpenWeatherOrgService.OpenWeatherOrgBinder openWeatherOrgService;
+
+    private ServiceConnection openWeatherOrgServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            openWeatherOrgService = (OpenWeatherOrgService.OpenWeatherOrgBinder)iBinder;
+            isBinded = true;
+
+            //Refresh data for current city
+            openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            openWeatherOrgService = null;
+            isBinded = false;
+        }
+    };
+
 
     /**
      * Activity on create stuff
@@ -80,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        handler = new Handler();
         userSettings = UserSettings.getUserSettings();
 
         restoreSettingsFromBundle(savedInstanceState);
@@ -90,13 +111,12 @@ public class MainActivity extends AppCompatActivity {
 
         findViews();
 
+        bindOpenWeatherService();
+
         if ( mCityWeatherList == null ) {
             //For fist run build data from old state
-            prepareWeatherData();
+            restoreSettings();
         }
-
-        //refreshWeatherDataFor(userSettings.getCurrentPlace());
-
 
         setupActionBar();
         setupNavigationDrawer();
@@ -175,7 +195,9 @@ public class MainActivity extends AppCompatActivity {
 
         //Request new weather if needed
         if ( currentCityWeather.getWeather() == null ) {
-            refreshWeatherDataFor(currentCityWeather.getCity());
+            if (isBinded) {
+                Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+            }
         }
     }
 
@@ -210,7 +232,6 @@ public class MainActivity extends AppCompatActivity {
     private void navigateTo(int id) {
         navigationView.setCheckedItem(id);
         showNavigateFragment(id);
-
     }
 
     private void saveOptionIfNeeded() {
@@ -258,8 +279,25 @@ public class MainActivity extends AppCompatActivity {
         snackbar.show();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onOWeatherEvent(OpenWeatherProviderEvent event) {
+
+    // Weather update handler
+    private BroadcastReceiver onWeatherUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final OpenWeatherProviderEvent result = (OpenWeatherProviderEvent)intent.getSerializableExtra(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_RESULT);
+
+            if ( result ==  null ) return;
+            // Потокобезопасный вывод данных
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    onOWeatherEvent(result);
+                }
+            });
+        }
+    };
+
+    private void onOWeatherEvent(@NonNull  OpenWeatherProviderEvent event) {
         switch (event.getResultCode()) {
             case CONNECTION_ERROR:
                 displayMessage(event.getErrorDescription());
@@ -271,9 +309,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private BroadcastReceiver onCitySearchResultReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final  OpenWeatherSearchResultEvent event
+                    = (OpenWeatherSearchResultEvent)intent.getSerializableExtra(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_RESULT);
+            if ( event != null ) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        onFoundCities(event);
+                    }
+                });
+            }
+        }
+    };
+
     //Handler for city search result
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onFoundCities(OpenWeatherSearchResultEvent event) {
+    public void onFoundCities(@NonNull OpenWeatherSearchResultEvent event) {
         switch (event.getResultCode()) {
             case CONNECTION_ERROR:
                 displayMessage(event.getErrorDescription());
@@ -282,15 +335,6 @@ public class MainActivity extends AppCompatActivity {
                 //Nothing found
                 CitySelectionDialogFragment dialogFragment =
                         CitySelectionDialogFragment.newInstance(event.getSearchDetails(), event.getKeyword());
-
-/*
-                dialogFragment.setOnCitySelectedCallBack(new CitySelectionDialogFragment.OnCitySelectedListener() {
-                    @Override
-                    public void onCitySelected(UserSettings.CityID cityID) {
-
-                    }
-                });
-*/
                 dialogFragment.show(getSupportFragmentManager(),
                         "dialog_fragment");
                 break;
@@ -300,11 +344,32 @@ public class MainActivity extends AppCompatActivity {
     @Subscribe
     public void addNewCity(SearchEngineCitySelectedEvent event) {
         if ( event.getCityID() != null ) {
+            if ( currentCityWeather.getCity().equals( event.getCityID()) ) {
+                navigateTo(R.id.nav_weather_details);
+                return; //already exist in current place
+            }
+
+            //Check selected city for other places
+            for ( CityWeatherSettings cws: mCityWeatherList
+                 ) {
+                if ( cws.getCity().equals(event.getCityID())) {
+                    mCityWeatherList.add(0, currentCityWeather);
+                    mCityWeatherList.remove(cws);
+                    currentCityWeather = cws;
+                    navViewDisplayCity();
+                    navigateTo(R.id.nav_favorites);
+                    navigateTo(R.id.nav_weather_details);
+                    return;
+                }
+            }
+
             //Add new city
             if ( !currentCityWeather.getCity().equals( event.getCityID()) ) {
                 mCityWeatherList.add(0, currentCityWeather);
                 currentCityWeather = new CityWeatherSettings( event.getCityID(), new WeatherEntity(), userSettings.getOptions());
-                refreshWeatherDataFor(currentCityWeather.getCity());
+                if (isBinded) {
+                    Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+                }
                 navViewDisplayCity();
             }
             navigateTo(R.id.nav_favorites);
@@ -313,14 +378,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onCitySearchRequested(String key) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (weatherProvider) {
-                    weatherProvider.findForecastFor(key);
-                }
-            }
-        }).start();
+        if (isBinded) {
+            Objects.requireNonNull(openWeatherOrgService).findForecastFor(key);
+        }
     }
 
     //Search city
@@ -328,7 +388,6 @@ public class MainActivity extends AppCompatActivity {
         searchDialog.setCancelable(false);
         searchDialog.show(getSupportFragmentManager(), "Search dialog");
     }
-
 
     private void updateWeatherView() {
         FragmentManager fm = getSupportFragmentManager();
@@ -344,85 +403,94 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void refreshCachedWeatherData() {
-        //Request new weather data from internet
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (weatherProvider) {
-                    weatherProvider.refreshWeatherList();
-                }
-            }
-        }).start();
-    }
-
-    private void refreshWeatherDataFor(CityID city) {
-        //Request new weather data from internet
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (weatherProvider) {
-                    weatherProvider.updateWeatherFor(city);
-                }
-            }
-        }).start();
-    }
-
     private void refreshWeatherDataForOtherPlaces() {
         //Request new weather data from internet
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < mCityWeatherList.size(); i++) {
-                    synchronized (weatherProvider) {
-                        weatherProvider.updateWeatherFor(mCityWeatherList.get(i).getCity());
-                    }
-                }
-            }
-        }).start();
+        if ( !isBinded) return;
+        for (int i = 0; i < mCityWeatherList.size(); i++) {
+            Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(mCityWeatherList.get(i).getCity());
+        }
     }
 
     /**
      * Setup class weather info
      */
-    private void prepareWeatherData() {
-        currentCityWeather = new CityWeatherSettings(userSettings.getCurrentPlace(),
-                    weatherProvider.getWeatherFor(userSettings.getCurrentPlace()),
-                    userSettings.getOptions());
-
+    private synchronized void prepareWeatherData() {
+        if ( !isBinded) return;
         CityID[] otherPlaces = userSettings.getOtherPacesList();
         mCityWeatherList = new ArrayList<>(otherPlaces.length);
 
         for ( CityID city: otherPlaces ) {
-            CityWeatherSettings cs = new CityWeatherSettings(city, weatherProvider.getWeatherFor(city), userSettings.getOptions());
-            cs.addWeekForecastWeather(weatherProvider.getWeatherWeekForecastFor(city));
+            CityWeatherSettings cs = new CityWeatherSettings(city,
+                    Objects.requireNonNull(openWeatherOrgService).getWeatherFor(city),
+                    userSettings.getOptions());
+            cs.addWeekForecastWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherWeekForecastFor(city));
             mCityWeatherList.add(cs);
+        }
+
+        currentCityWeather = new CityWeatherSettings(userSettings.getCurrentPlace(),
+                Objects.requireNonNull(openWeatherOrgService).getWeatherFor(userSettings.getCurrentPlace()),
+                userSettings.getOptions());
+    }
+
+    private synchronized void restoreSettings() {
+        CityID[] otherPlaces = userSettings.getOtherPacesList();
+        mCityWeatherList = new ArrayList<>(otherPlaces.length);
+
+        for ( CityID city: otherPlaces ) {
+            CityWeatherSettings cs = new CityWeatherSettings(city,
+                    null,
+                    userSettings.getOptions());
+            mCityWeatherList.add(cs);
+        }
+
+        currentCityWeather = new CityWeatherSettings(userSettings.getCurrentPlace(),
+                null,
+                userSettings.getOptions());
+    }
+
+
+    private void updateWeatherData() {
+        if (!isBinded) return;
+        currentCityWeather.setWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherFor(currentCityWeather.getCity()));
+        for (CityWeatherSettings cs : mCityWeatherList) {
+            cs.setWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherFor(cs.getCity()));
+            cs.addWeekForecastWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherWeekForecastFor(cs.getCity()));
         }
     }
 
-    private void updateWeatherData() {
-        currentCityWeather.setWeather(weatherProvider.getWeatherFor(currentCityWeather.getCity()));
-        for ( CityWeatherSettings cs: mCityWeatherList ) {
-            cs.setWeather( weatherProvider.getWeatherFor(cs.getCity()));
-            cs.addWeekForecastWeather(weatherProvider.getWeatherWeekForecastFor(cs.getCity()));
+    private void bindOpenWeatherService() {
+        if (!isBinded) {
+            Intent intent = new Intent(this, OpenWeatherOrgService.class);
+            bindService(intent, openWeatherOrgServiceConnection, BIND_AUTO_CREATE);
+        }
+    }
+
+    private void unbindOpenWeatherService() {
+        if (isBinded) {
+            unbindService(openWeatherOrgServiceConnection);
         }
     }
 
     @Override
     protected void onDestroy() {
-        onDebug("onDestroy");
         super.onDestroy();
+        onDebug("onDestroy");
+        unbindOpenWeatherService();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        registerReceiver(onCitySearchResultReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_FINISHED));
+        registerReceiver(onWeatherUpdateReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_FINISHED));
         onDebug("onStart");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        unregisterReceiver(onCitySearchResultReceiver);
+        unregisterReceiver(onWeatherUpdateReceiver);
         onDebug("onStop");
     }
 
@@ -483,7 +551,9 @@ public class MainActivity extends AppCompatActivity {
                     refreshWeatherDataForOtherPlaces();
                 } else {
                     //Refresh current city only
-                    refreshWeatherDataFor(currentCityWeather.getCity());
+                    if (isBinded) {
+                        Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+                    }
                 }
                 return true;
             default:
@@ -563,7 +633,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        weatherProvider.getBus().unregister(this);
         WeatherAppBus.getBus().unregister(this);
         onDebug("onPause");
     }
@@ -575,15 +644,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //To receive events on WeatherProvider
-        weatherProvider.getBus().register(this);
         WeatherAppBus.getBus().register(this);
         //Startup view
         navViewDisplayCity();
         if (getSupportFragmentManager().getBackStackEntryCount() == 0 ) {
             navigateTo(R.id.nav_weather_details);
         }
-
-        //navigateTo(lastSelectedSection);
         onDebug("onResume");
     }
 

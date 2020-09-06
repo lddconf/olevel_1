@@ -1,6 +1,8 @@
 package com.example.weather.weatherprovider.openweatherorg.currentWeatherModel;
 
-public class Coord {
+import java.io.Serializable;
+
+public class Coord implements Serializable {
     private float lon;
     private float lat;
 

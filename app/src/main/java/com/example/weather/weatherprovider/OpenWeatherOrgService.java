@@ -28,19 +28,39 @@ public class OpenWeatherOrgService extends Service {
     public static final String BROADCAST_ACTION_WEATHER_UPDATE_RESULT = "com.example.weather.weatherprovider.openweatherorg.OpenWeatherProviderEvent.RESULT";
 
     @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        provider.getBus().register(binder);
-        return binder;
+    public void onCreate() {
+        super.onCreate();
+        provider.getBus().register(this);
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
-        provider.getBus().unregister(binder);
-        return super.onUnbind(intent);
+    public void onDestroy() {
+        super.onDestroy();
+        provider.getBus().unregister(this);
     }
 
-    class OpenWeatherOrgBinder extends Binder {
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return binder;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onOWeatherEvent(OpenWeatherProviderEvent event) {
+        Intent broadcastIntent = new Intent(BROADCAST_ACTION_WEATHER_UPDATE_FINISHED);
+        broadcastIntent.putExtra(BROADCAST_ACTION_WEATHER_UPDATE_RESULT, event);
+        sendBroadcast(broadcastIntent);
+    }
+
+    //Handler for city search result
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onFoundCities(OpenWeatherSearchResultEvent event) {
+        Intent broadcastIntent = new Intent(BROADCAST_ACTION_SEARCH_FINISHED);
+        broadcastIntent.putExtra(BROADCAST_ACTION_SEARCH_RESULT, event);
+        sendBroadcast(broadcastIntent);
+    }
+
+    public class OpenWeatherOrgBinder extends Binder {
 
         public OpenWeatherOrgService getService() {
             return OpenWeatherOrgService.this;
@@ -59,21 +79,6 @@ public class OpenWeatherOrgService extends Service {
             }).start();
         }
 
-        @Subscribe(threadMode = ThreadMode.MAIN)
-        public void onOWeatherEvent(OpenWeatherProviderEvent event) {
-            Intent broadcastIntent = new Intent(BROADCAST_ACTION_WEATHER_UPDATE_FINISHED);
-            broadcastIntent.putExtra(BROADCAST_ACTION_WEATHER_UPDATE_RESULT, event);
-            sendBroadcast(broadcastIntent);
-        }
-
-        //Handler for city search result
-        @Subscribe(threadMode = ThreadMode.MAIN)
-        public void onFoundCities(OpenWeatherSearchResultEvent event) {
-            Intent broadcastIntent = new Intent(BROADCAST_ACTION_SEARCH_FINISHED);
-            broadcastIntent.putExtra(BROADCAST_ACTION_SEARCH_RESULT, event);
-            sendBroadcast(broadcastIntent);
-        }
-
         public ArrayList<WeatherEntity> getWeatherWeekForecastFor(CityID city) {
             return provider.getWeatherWeekForecastFor(city);
         }
@@ -82,7 +87,7 @@ public class OpenWeatherOrgService extends Service {
             return provider.getWeatherFor(city);
         }
 
-        private void refreshWeatherDataFor(CityID city) {
+        public void refreshWeatherDataFor(CityID city) {
             //Request new weather data from internet
             new Thread(new Runnable() {
                 @Override
@@ -92,7 +97,7 @@ public class OpenWeatherOrgService extends Service {
             }).start();
         }
 
-        public void refreshWeatherList() {
+        public void refreshCachedWeatherData() {
             new Thread(new Runnable() {
                 @Override
                 public void run() {

@@ -9,7 +9,7 @@ public class OpenWeatherProviderEvent implements Serializable {
     private CityID city;
     private String errorDescription;
 
-    public enum OWeatherResult {
+    public enum OWeatherResult implements Serializable {
         REQUEST_COMPLETED, CONNECTION_ERROR;
     }
 
