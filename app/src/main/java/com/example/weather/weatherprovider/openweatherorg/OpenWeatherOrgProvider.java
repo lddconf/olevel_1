@@ -100,7 +100,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
             final WeatherData weatherData = gson.fromJson(jsonData, WeatherData.class);
 
             if ( weatherData.getCode() == 200 ) { //City data processing
-                updatedWeather = weatherData.toWeatherEntity();
+                updatedWeather = new WeatherEntity(weatherData); //Mapping
                 synchronized (weathers) {
                     weathers.put(city, updatedWeather);
                     bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
