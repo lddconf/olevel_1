@@ -1,8 +1,12 @@
 package com.example.weather.weather;
 
 import com.example.weather.R;
+import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.Weather;
+import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.WeatherData;
 
 import java.io.Serializable;
+
+import static com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider.convertWeatherImageID2Custom;
 
 public class WeatherEntity implements Serializable {
     private int temperature;
@@ -54,6 +58,14 @@ public class WeatherEntity implements Serializable {
             float inCelsiusFeelsLike = Math.round((getTemperature() - 32f) / 1.8f);
             return new WeatherEntity((int)inCelsiusTemp, (int)inCelsiusFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), false, getIconID());
         }
+    }
+
+    public WeatherEntity(final WeatherData wd) {
+        this( (int)Math.round(wd.getMain().getTemp()),
+                (int)Math.round(wd.getMain().getFeels_like()),
+                wd.getWind().getSpeed(), wd.getMain().getPressure(),
+                wd.getWeather()[0].getMain(),
+                false, convertWeatherImageID2Custom(wd.getWeather()[0].getIcon()) );
     }
 
     /**

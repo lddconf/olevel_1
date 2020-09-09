@@ -241,7 +241,7 @@ public class WeatherDisplayFragment extends Fragment {
             pressureView.setVisibility(View.VISIBLE);
 
             if ( settings.getWeather() != null ) {
-                pressureView.setText(String.format(Locale.getDefault(), "%d mm", settings.getWeather().getPressureBar()));
+                pressureView.setText(String.format(Locale.getDefault(), "%d kPa", settings.getWeather().getPressureBar()));
             } else {
                 pressureView.setText(R.string.not_avaliable);
             }

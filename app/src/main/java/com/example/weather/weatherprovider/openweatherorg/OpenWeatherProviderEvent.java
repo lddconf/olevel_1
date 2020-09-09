@@ -2,12 +2,14 @@ package com.example.weather.weatherprovider.openweatherorg;
 
 import com.example.weather.CityID;
 
-public class OpenWeatherProviderEvent {
-    OWeatherResult resultCode;
-    CityID city;
-    String         errorDescription;
+import java.io.Serializable;
 
-    public enum OWeatherResult {
+public class OpenWeatherProviderEvent implements Serializable {
+    private OWeatherResult resultCode;
+    private CityID city;
+    private String errorDescription;
+
+    public enum OWeatherResult implements Serializable {
         REQUEST_COMPLETED, CONNECTION_ERROR;
     }
 

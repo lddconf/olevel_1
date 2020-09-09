@@ -47,14 +47,6 @@ public class WeatherData {
         return name;
     }
 
-    public WeatherEntity toWeatherEntity() {
-        return new WeatherEntity( (int)Math.round(getMain().getTemp()),
-                (int)Math.round(getMain().getFeels_like()),
-                getWind().getSpeed(), getMain().getPressure(),
-                getWeather()[0].getMain(),
-                false, convertWeatherImageID2Custom(getWeather()[0].getIcon()) );
-    }
-
     public int getCode() {
         return cod;
     }

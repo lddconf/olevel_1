@@ -1,5 +1,7 @@
 package com.example.weather;
 
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 
 public class CityID implements Serializable {
@@ -35,5 +37,17 @@ public class CityID implements Serializable {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if ( obj instanceof CityID ) {
+            CityID rval = (CityID)obj;
+            if ( rval == null ) {
+                return false;
+            }
+            return rval.id == this.id;
+        }
+        return false;
     }
 }

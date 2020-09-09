@@ -27,9 +27,6 @@ public class CitySelectionDialogFragment extends BottomSheetDialogFragment {
     public static final String searchDetailsKey = "searchDetailsKey";
     public static final String searchKeywordKey = "searchKeywordKey";
 
-
-
-
     public static CitySelectionDialogFragment newInstance(final LinkedList<OpenWeatherSearchResultEvent.WeatherSearchDetails> searchDetails, final String keyword) {
         CitySelectionDialogFragment fragment = new CitySelectionDialogFragment();
         Bundle args = new Bundle();
