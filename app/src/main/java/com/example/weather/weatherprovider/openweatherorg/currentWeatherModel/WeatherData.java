@@ -1,11 +1,11 @@
 package com.example.weather.weatherprovider.openweatherorg.currentWeatherModel;
 
-import com.example.weather.weather.WeatherEntity;
-
-import static com.example.weather.weatherprovider.openweatherorg.OpenWeatherOrgProvider.convertWeatherImageID2Custom;
+import com.google.gson.annotations.SerializedName;
 
 public class WeatherData {
-    private Coord coord;
+    @SerializedName("coord")
+    private Coord coordinations;
+
     private Weather[] weather;
     private Main main;
     private Wind wind;
@@ -19,8 +19,8 @@ public class WeatherData {
     //Message for error handling
     private String message;
 
-    public Coord getCoord() {
-        return coord;
+    public Coord getCoordinations() {
+        return coordinations;
     }
 
     public Weather[] getWeather() {

@@ -18,6 +18,7 @@ public class WeatherDisplayOptionsFragment extends Fragment {
     private SwitchCompat showFeelsLike;
     private SwitchCompat temperatureUnit;
     private SwitchCompat themeSelection;
+    private SwitchCompat useBuildInIcons;
     private WeatherDisplayOptions settings;
     private ThemeChanged themeChangedCallback;
 
@@ -53,11 +54,12 @@ public class WeatherDisplayOptionsFragment extends Fragment {
         setupWindSwitch();
         setupPressureSwitch();
         setupFeelsLikeSwitch();
-
+        setupUseBuildInIconsSwitch();
 
         updateShowWindSpeed();
         updateShowPressure();
         updateShowFeelsLike();
+        updateUseBuildInIcons();
 
         updateThemeSelection();
         setupThemeSelection();
@@ -101,8 +103,16 @@ public class WeatherDisplayOptionsFragment extends Fragment {
         showFeelsLike.setOnCheckedChangeListener((compoundButton, b) -> settings.setShowFeelsLike(b));
     }
 
+    private void setupUseBuildInIconsSwitch() {
+        useBuildInIcons.setOnCheckedChangeListener((compoundButton, b) -> settings.setUseBuildInIcons(b));
+    }
+
     private void updateShowWindSpeed() {
         showWindSwitch.setChecked(settings.isShowWindSpeed());
+    }
+
+    private void updateUseBuildInIcons() {
+        useBuildInIcons.setChecked(settings.isUseBuildInIcons());
     }
 
     private void updateShowPressure() {
@@ -141,6 +151,7 @@ public class WeatherDisplayOptionsFragment extends Fragment {
         showPressure = view.findViewById(R.id.enablePressure);
         temperatureUnit = view.findViewById(R.id.temperatureUnit);
         themeSelection = view.findViewById(R.id.themeSelection);
+        useBuildInIcons = view.findViewById(R.id.useExternalIcons);
     }
 
     @Override
@@ -151,9 +162,9 @@ public class WeatherDisplayOptionsFragment extends Fragment {
             settings.setShowWindSpeed(showWindSwitch.isChecked());
             settings.setTemperatureUnit(temperatureUnit.isChecked());
             settings.setShowFeelsLike(showFeelsLike.isChecked());
+            settings.setUseBuildInIcons(useBuildInIcons.isChecked());
             outState.putSerializable(DisplayOptionsKey, settings);
         }
-
 
         super.onSaveInstanceState(outState);
     }

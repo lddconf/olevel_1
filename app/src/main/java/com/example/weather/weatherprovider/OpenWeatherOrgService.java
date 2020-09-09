@@ -3,7 +3,6 @@ package com.example.weather.weatherprovider;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 
 import com.example.weather.CityID;
@@ -71,12 +70,7 @@ public class OpenWeatherOrgService extends Service {
          * @param keyword - searched place
          */
         public void findForecastFor(String keyword) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    provider.findForecastFor(keyword);
-                }
-            }).start();
+            provider.findForecastForAsync(keyword);
         }
 
         public ArrayList<WeatherEntity> getWeatherWeekForecastFor(CityID city) {
@@ -89,22 +83,11 @@ public class OpenWeatherOrgService extends Service {
 
         public void refreshWeatherDataFor(CityID city) {
             //Request new weather data from internet
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    provider.updateWeatherFor(city);
-                }
-            }).start();
+            provider.updateWeatherForAsync(city);
         }
 
         public void refreshCachedWeatherData() {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    provider.refreshWeatherList();
-                }
-            }).start();
-
+            provider.refreshWeatherListAsync();
         }
     }
 }
