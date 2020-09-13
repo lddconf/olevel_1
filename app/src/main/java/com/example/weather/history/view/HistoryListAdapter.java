@@ -24,7 +24,9 @@ import com.example.weather.history.WeatherHistoryWithCityAndIcon;
 import com.example.weather.weather.CityWeatherSettings;
 import com.example.weather.weather.WeatherEntity;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.HistoryListViewHolder> {
     private Context context;
@@ -49,6 +51,7 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
     public class HistoryListViewHolder extends RecyclerView.ViewHolder {
         private TextView cityNameView;
         private TextView briefTempView;
+        private TextView updated;
 
         public HistoryListViewHolder(View view) {
             super(view);
@@ -74,6 +77,11 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
 
             briefTempView.setText(tempUnit);
 
+            SimpleDateFormat df = new SimpleDateFormat(context.getString(R.string.date_format), Locale.getDefault());
+            String dateTime = df.format(weatherHistoryWithCityAndIcon.history.timestamp);
+            updated.setText(dateTime);
+
+            updated.setOnClickListener(view -> handleOnItemClick());
             cityNameView.setOnClickListener(view -> handleOnItemClick());
             briefTempView.setOnClickListener(v -> handleOnItemClick());
 
@@ -93,6 +101,7 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
         private void findViews(View view) {
             cityNameView = view.findViewById(R.id.cityName);
             briefTempView = view.findViewById(R.id.briefTemp);
+            updated = view.findViewById(R.id.date);
         }
     }
 
@@ -223,7 +232,7 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
     @NonNull
     @Override
     public HistoryListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.city_info_layout, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.history_list_layout, parent, false);
         return new HistoryListViewHolder(view);
     }
 
