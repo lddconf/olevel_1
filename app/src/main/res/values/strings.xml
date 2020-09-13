@@ -79,5 +79,7 @@
     <string name="display_weather_frame_current_place">Current place</string>
     <string name="refresh_label">Refresh</string>
     <string name="find_city_title">Search for city</string>
+    <string name="search_dialog_title">Search dialog</string>
+    <string name="use_build_in_icons_title">Use build in icons</string>
 
 </resources>

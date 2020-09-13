@@ -12,6 +12,7 @@ public class WeatherDisplayOptions implements Serializable {
     private boolean showWindSpeed;
     private boolean showPressure;
     private boolean showFeelsLike;
+    private boolean useBuildInIcons;
     private int themeId;
 
     public WeatherDisplayOptions() {
@@ -19,10 +20,15 @@ public class WeatherDisplayOptions implements Serializable {
     }
 
     public WeatherDisplayOptions(boolean useFahrenheitTempUnit, boolean showWindSpeed, boolean showPressure, boolean showFeelsLike, int themeId) {
+        this(useFahrenheitTempUnit, showWindSpeed, showPressure, showFeelsLike, false, themeId);
+    }
+
+    public WeatherDisplayOptions(boolean useFahrenheitTempUnit, boolean showWindSpeed, boolean showPressure, boolean showFeelsLike, boolean useBuildInIcons, int themeId) {
         this.useFahrenheitTempUnit = useFahrenheitTempUnit;
         this.showWindSpeed = showWindSpeed;
         this.showPressure = showPressure;
         this.showFeelsLike = showFeelsLike;
+        this.useBuildInIcons = useBuildInIcons;
         this.themeId = themeId;
     }
 
@@ -42,8 +48,16 @@ public class WeatherDisplayOptions implements Serializable {
         return showFeelsLike;
     }
 
-    public void setTemperatureUnit(boolean useFahrenheitTempUnit) {
-        this.useFahrenheitTempUnit = useFahrenheitTempUnit;
+    public int getThemeId() {
+        return themeId;
+    }
+
+    public boolean isLightTheme() {
+        return (themeId == R.style.AppThemeLight);
+    }
+
+    public boolean isUseBuildInIcons() {
+        return useBuildInIcons;
     }
 
     public void setShowWindSpeed(boolean showWindSpeed) {
@@ -58,8 +72,8 @@ public class WeatherDisplayOptions implements Serializable {
         this.showFeelsLike = showFeelsLike;
     }
 
-    public int getThemeId() {
-        return themeId;
+    public void setTemperatureUnit(boolean useFahrenheitTempUnit) {
+        this.useFahrenheitTempUnit = useFahrenheitTempUnit;
     }
 
     public void setThemeLight() {
@@ -70,7 +84,7 @@ public class WeatherDisplayOptions implements Serializable {
         this.themeId = R.style.AppThemeDark;
     }
 
-    public boolean isLightTheme() {
-        return (themeId == R.style.AppThemeLight);
+    public void setUseBuildInIcons(boolean useBuildInIcons) {
+        this.useBuildInIcons = useBuildInIcons;
     }
 }

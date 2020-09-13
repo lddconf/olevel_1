@@ -386,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
     //Search city
     private void searchCity() {
         searchDialog.setCancelable(false);
-        searchDialog.show(getSupportFragmentManager(), "Search dialog");
+        searchDialog.show(getSupportFragmentManager(), getString(R.string.search_dialog_title));
     }
 
     private void updateWeatherView() {

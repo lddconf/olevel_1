@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weather.R;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 
@@ -44,6 +45,8 @@ public class WeatherDisplayFragment extends Fragment {
     private RecyclerView weatherWeekDetails;
 
     public static final String WeatherDisplayOptionsKey = "DisplayOptionsKey";
+
+    private static final String WEATHER_ICON_SERVER_MASK = "http://openweathermap.org/img/wn/%s@2x.png";
 
     @Nullable
     @Override
@@ -266,9 +269,14 @@ public class WeatherDisplayFragment extends Fragment {
      * Update Weather status image
      */
     private void updateWeatherView() {
-
         if ( settings.getWeather() != null ) {
-            weatherView.setImageResource(settings.getWeather().getIconID());
+            if ( settings.getWeatherDisplayOptions().isUseBuildInIcons() ) {
+                weatherView.setImageResource(settings.getWeather().getBuildInIconID());
+                return;
+            }
+            Picasso.get().load(String.format(Locale.getDefault(),
+                    WEATHER_ICON_SERVER_MASK, settings.getWeather().getExternalIconID()))
+                    .placeholder(R.mipmap.ic_weather_na).into(weatherView);
         } else {
             weatherView.setImageResource(R.mipmap.ic_weather_na);
         }

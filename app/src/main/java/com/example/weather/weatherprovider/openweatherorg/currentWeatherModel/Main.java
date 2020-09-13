@@ -1,10 +1,19 @@
 package com.example.weather.weatherprovider.openweatherorg.currentWeatherModel;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Main {
     private float temp;
-    private float feels_like;
-    private float temp_min;
-    private float temp_max;
+
+    @SerializedName("feels_like")
+    private float feelsLike;
+
+    @SerializedName("temp_min")
+    private float tempMin;
+
+    @SerializedName("temp_max")
+    private float tempMax;
+
     private int pressure;
     private int humidity;
 
@@ -12,16 +21,16 @@ public class Main {
         return temp;
     }
 
-    public float getFeels_like() {
-        return feels_like;
+    public float getFeelsLike() {
+        return feelsLike;
     }
 
-    public float getTemp_min() {
-        return temp_min;
+    public float getTempMin() {
+        return tempMin;
     }
 
-    public float getTemp_max() {
-        return temp_max;
+    public float getTempMax() {
+        return tempMax;
     }
 
     public int getPressure() {
@@ -36,16 +45,16 @@ public class Main {
         this.temp = temp;
     }
 
-    public void setFeels_like(float feels_like) {
-        this.feels_like = feels_like;
+    public void setFeelsLike(float feelsLike) {
+        this.feelsLike = feelsLike;
     }
 
-    public void setTemp_min(float temp_min) {
-        this.temp_min = temp_min;
+    public void setTempMin(float tempMin) {
+        this.tempMin = tempMin;
     }
 
-    public void setTemp_max(float temp_max) {
-        this.temp_max = temp_max;
+    public void setTempMax(float tempMax) {
+        this.tempMax = tempMax;
     }
 
     public void setPressure(int pressure) {
