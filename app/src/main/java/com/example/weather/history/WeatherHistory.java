@@ -15,15 +15,15 @@ import java.util.Date;
 @Entity(foreignKeys = {
         @ForeignKey(entity = WeatherIcon.class,
         parentColumns = "iconId",
-        childColumns = "iconId",
+        childColumns = "_iconId",
         onDelete = ForeignKey.SET_NULL),
         @ForeignKey(entity = WeatherCity.class,
         parentColumns = "cityId",
-        childColumns = "cityId",
+        childColumns = "_cityId",
         onDelete = ForeignKey.CASCADE)
 },
-        indices = {@Index(value = {"cityId"}),
-                @Index(value = {"iconId"})})
+        indices = {@Index(value = {"_cityId"}),
+                @Index(value = {"_iconId"})})
 public class WeatherHistory {
 
     @PrimaryKey(autoGenerate = true)
@@ -35,6 +35,9 @@ public class WeatherHistory {
     @ColumnInfo(name = "feels_like")
     public float feelsLike;
 
+    @ColumnInfo(name = "isFahrenheit")
+    public boolean isFahrenheit;
+
     @ColumnInfo(name = "wind_speed")
     public double windSpeed;
 
@@ -45,10 +48,10 @@ public class WeatherHistory {
     @TypeConverters({DateTimeConverter.class})
     public Date timestamp;
 
-    @ColumnInfo( name = "iconId")
+    @ColumnInfo( name = "_iconId")
     public long iconId;
 
-    @ColumnInfo( name = "cityId" )
+    @ColumnInfo( name = "_cityId" )
     public long cityId;
 
     public static WeatherHistory make(WeatherEntity weatherEntity, long cityId, long iconId) {
@@ -60,6 +63,7 @@ public class WeatherHistory {
         weatherHistory.temp = weatherEntity.getTemperature();
         weatherHistory.windSpeed = weatherEntity.getWindSpeed();
         weatherHistory.timestamp = Calendar.getInstance().getTime();
+        weatherHistory.isFahrenheit = weatherEntity.isFahrenheitTempUnit();
         return weatherHistory;
     }
 

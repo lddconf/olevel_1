@@ -32,6 +32,7 @@ import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
 import com.example.weather.history.WeatherCity;
 import com.example.weather.history.WeatherHistory;
 import com.example.weather.history.WeatherIcon;
+import com.example.weather.history.view.WeatherHistoryList;
 import com.example.weather.weather.CityWeatherSettings;
 import com.example.weather.weather.WeatherDisplayFragment;
 import com.example.weather.weather.WeatherEntity;
@@ -53,7 +54,6 @@ import java.util.Objects;
  */
 public class MainActivity extends AppCompatActivity {
     private Toolbar mainToolBar;
-    //private WeatherDisplayOptions options;
     private ArrayList<CityWeatherSettings> mCityWeatherList;
     private CityWeatherSettings currentCityWeather;
 
@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_favorites, R.id.nav_about, R.id.nav_weather_details)
+                R.id.nav_favorites, R.id.nav_about, R.id.nav_weather_details, R.id.nav_feedback, R.id.nav_history)
                 .setDrawerLayout(drawer)
                 .build();
 
@@ -230,6 +230,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setHistory() {
+
+        setFragment(WeatherHistoryList.newInstance());
+    }
+
     private void setSettingsFragment() {
         WeatherDisplayOptionsFragment settings = new WeatherDisplayOptionsFragment();
         Bundle arguments = new Bundle();
@@ -297,6 +302,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.nav_weather_details:
                     setCurrentWeather();
+                    break;
+                case R.id.nav_history:
+                    setHistory();
                     break;
             }
             lastSelectedSection = id;
