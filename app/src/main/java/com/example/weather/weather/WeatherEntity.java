@@ -64,7 +64,7 @@ public class WeatherEntity implements Serializable {
         } else {
             float inFahrenheitTemp = Math.round(getTemperature()*1.8f + 32f);
             float inFahrenheitFeelsLike = Math.round(getFeelsLikeTemp()*1.8f + 32f);
-            return new WeatherEntity((int)inFahrenheitTemp, (int)inFahrenheitFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), true, null);
+            return new WeatherEntity((int)inFahrenheitTemp, (int)inFahrenheitFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), true, getExternalIconID());
         }
     }
 
@@ -74,7 +74,7 @@ public class WeatherEntity implements Serializable {
         } else {
             float inCelsiusTemp = Math.round((getTemperature() - 32f) / 1.8f);
             float inCelsiusFeelsLike = Math.round((getTemperature() - 32f) / 1.8f);
-            return new WeatherEntity((int)inCelsiusTemp, (int)inCelsiusFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), false, null);
+            return new WeatherEntity((int)inCelsiusTemp, (int)inCelsiusFeelsLike, getWindSpeed(), getPressureBar(), getCloudiness(), false, getExternalIconID());
         }
     }
 

@@ -1,19 +1,25 @@
 package com.example.weather;
 
-import com.example.weather.diplayoption.WeatherDisplayOptions;
+import android.content.Context;
+import android.content.SharedPreferences;
 
+import com.example.weather.diplayoption.WeatherDisplayOptions;
+import com.example.weather.weatherprovider.openweatherorg.currentWeatherModel.Weather;
+import com.google.gson.annotations.Expose;
+
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
-public class UserSettings {
+public class UserSettings implements Serializable {
     private CityID currentPlace;
     private LinkedHashSet<CityID> otherPlaces;
     private String username;
     private int avatarID;
     private WeatherDisplayOptions options;
 
+    @Expose(serialize = false, deserialize = false)
     private static UserSettings settings;
-
 
     private UserSettings() {
         currentPlace = new CityID("Moscow", "RU", 524901);
@@ -27,6 +33,7 @@ public class UserSettings {
 
         options = new WeatherDisplayOptions();
         options.setTemperatureUnit(false);
+
     }
 
     public static UserSettings getUserSettings() {
