@@ -245,15 +245,15 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
     public void onBindViewHolder(@NonNull HistoryListViewHolder holder, int position) {
         // - get element from your data set at this position
         // - replace the contents of the view with that element
-        holder.bind(historySource.getHistory(cityIDFilter).get(position));
+        holder.bind(historySource.getHistory().get(position));
     }
 
     public void deleteItem(int position) {
-        itemRecentlyRemoved = historySource.getHistory(cityIDFilter).get(position).history;
+        itemRecentlyRemoved = historySource.getHistory().get(position).history;
         itemRecentlyRemovedPosition = position;
         itemRecentlyRemovedPositionWasSelected = position == checkedPosition;
         historySource.removeHistory(
-            historySource.getHistory(cityIDFilter).get(position).history
+            historySource.getHistory().get(position).history
         );
         //notifyItemRemoved(position);
         notifyDataSetChanged();
@@ -302,6 +302,6 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
      */
     @Override
     public int getItemCount() {
-        return (int)historySource.getHistoryRecordsCount(cityIDFilter);
+        return (int)historySource.getHistoryRecordsCount();
     }
 }

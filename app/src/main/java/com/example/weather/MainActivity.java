@@ -137,6 +137,12 @@ public class MainActivity extends AppCompatActivity {
     private void savePreferences() {
         SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
+        userSettings.setCurrentPlace(currentCityWeather.getCity());
+
+        for (int i = 0; i < mCityWeatherList.size(); i++) {
+            userSettings.addOtherPlace(Objects.requireNonNull(mCityWeatherList.get(i)).getCity());
+        }
+
 
         Gson gson = new Gson();
         String options = gson.toJson(userSettings);
@@ -280,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
                 w.setWeatherDisplayOptions(userSettings.getOptions());
             }
             currentCityWeather.setWeatherDisplayOptions(userSettings.getOptions());
+            savePreferences();
         }
     }
 
@@ -302,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.nav_weather_details:
                     setCurrentWeather();
+                    savePreferences();
                     break;
                 case R.id.nav_history:
                     setHistory();
@@ -487,9 +495,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logRequestToDataBase(@NonNull CityID cityID, @NonNull WeatherEntity weatherEntity) {
-        long cityId = WeatherApp.getInstance().getWeatherCityDAO().getOrMakeCityId(WeatherCity.makeFrom(cityID));
-        long iconId = WeatherApp.getInstance().getWeatherIconsDAO().getOrMakeIconId(WeatherIcon.makeFrom(weatherEntity));
-        WeatherApp.getInstance().getWeatherHistoryDAO().insertWeatherHistory(WeatherHistory.make(weatherEntity, cityId, iconId));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long cityId = WeatherApp.getInstance().getWeatherCityDAO().getOrMakeCityId(WeatherCity.makeFrom(cityID));
+                long iconId = WeatherApp.getInstance().getWeatherIconsDAO().getOrMakeIconId(WeatherIcon.makeFrom(weatherEntity));
+                WeatherApp.getInstance().getWeatherHistoryDAO().insertWeatherHistory(WeatherHistory.make(weatherEntity, cityId, iconId));
+            }
+        }).start();
     }
 
     private void updateWeatherDataFor(CityID city) {
@@ -545,7 +558,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         unregisterReceiver(onCitySearchResultReceiver);
         unregisterReceiver(onWeatherUpdateReceiver);
-        savePreferences();
         onDebug("onStop");
     }
 
@@ -689,6 +701,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         WeatherAppBus.getBus().unregister(this);
+        savePreferences();
         onDebug("onPause");
     }
 

@@ -4,7 +4,11 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.TypedValue;
+import android.view.Window;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +16,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.textfield.TextInputLayout;
+
+import java.lang.reflect.Field;
 
 public class CitySearchDialog extends DialogFragment {
     private EditText input;
@@ -22,6 +28,8 @@ public class CitySearchDialog extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         input = new EditText(this.requireContext());
         input.setInputType(InputType.TYPE_CLASS_TEXT);
+
+        input.setBackgroundResource(android.R.color.transparent);
 
         input.setMaxLines(1);
         input.setSingleLine(true);
@@ -35,6 +43,7 @@ public class CitySearchDialog extends DialogFragment {
                 .setPositiveButton(R.string.ok_label, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+
                         String result = input.getText().toString().trim();
                         if (!result.isEmpty()) {
                             ((MainActivity)getActivity()).onCitySearchRequested(result);
@@ -48,6 +57,8 @@ public class CitySearchDialog extends DialogFragment {
                     }
                 }).setView(layout);
 
+
+
         if (savedInstanceState != null) {
             String saved = savedInstanceState.getString(inputKey);
             if ( saved != null ) {
@@ -55,7 +66,8 @@ public class CitySearchDialog extends DialogFragment {
             }
         }
 
-        return alert.create();
+        AlertDialog dialog = alert.create();
+        return dialog;
     }
 
     @Override

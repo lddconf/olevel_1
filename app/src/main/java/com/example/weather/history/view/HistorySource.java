@@ -11,7 +11,6 @@ import com.example.weather.history.WeatherHistoryWithCityAndIcon;
 import com.example.weather.history.WeatherIconsDAO;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class HistorySource {
@@ -30,55 +29,65 @@ public class HistorySource {
         this.weatherHistoryDAO = weatherHistoryDAO;
     }
 
-    public long getHistoryRecordsCount(@Nullable CityID city) {
-        if ( city == null ) {
-            return weatherHistoryDAO.getRecordsCount();
-        } else {
-            long cityId = weatherCityDAO.getIdByCityUniqueID(city.getId());
-            if ( cityId > 0 ) {
-                return weatherHistoryDAO.getRecordsCount(cityId);
+    public long getHistoryRecordsCount() {
+        synchronized (weatherHistoryDAO) {
+            if ( history != null ) {
+                return history.size();
             }
             return 0;
         }
     }
 
-    private void loadHistory(Long id) {
-        if ( id == null ) {
-            if ( cityId != null || history == null ) {
-                history = weatherHistoryDAO.getAllRecordsWithCityAndIcon();
-                Collections.reverse(history); //Reverse order
-                cityId = id;
-            }
-        } else {
-            if ( cityId == null || history == null || !cityId.equals(id)) {
-                history = weatherHistoryDAO.getAllRecordsWithCityAndIcon(id);
-                Collections.reverse(history); //Reverse order
-                cityId = id;
+    public void reloadHistoryFromDB(Long id) {
+        synchronized (weatherHistoryDAO) {
+            if (id == null) {
+                if (cityId != null || history == null) {
+                    history = weatherHistoryDAO.getAllRecordsWithCityAndIcon();
+                    Collections.reverse(history); //Reverse order
+                    cityId = id;
+                }
+            } else {
+                if (cityId == null || history == null || !cityId.equals(id)) {
+                    history = weatherHistoryDAO.getAllRecordsWithCityAndIcon(id);
+                    Collections.reverse(history); //Reverse order
+                    cityId = id;
+                }
             }
         }
     }
 
-    public List<WeatherHistoryWithCityAndIcon> getHistory(@Nullable CityID city) {
-        if ( city == null ) {
-            loadHistory(null);
-            return history;
-        } else {
-            long cityId = weatherCityDAO.getIdByCityUniqueID(city.getId());
-            if ( cityId > 0 ) {
-                loadHistory(Long.valueOf(cityId));
+    public List<WeatherHistoryWithCityAndIcon> getHistory() {
+        if ( history != null ) {
+            reloadHistoryFromDB(null);
+            synchronized (weatherHistoryDAO) {
                 return history;
             }
-            return null;
         }
+        return null;
     }
 
-    public void removeHistory(@NonNull WeatherHistory history) {
-        weatherHistoryDAO.deleteWeatherHistory(history);
-        history = null; //For reload purpose
+    public void removeHistory(@NonNull WeatherHistory hist) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                weatherHistoryDAO.deleteWeatherHistory(hist);
+                synchronized (weatherHistoryDAO) {
+                    history = null; //For reload purpose
+                }
+            }
+        }).start();
+
     }
 
-    public void addHistory(@NonNull WeatherHistory history) {
-        weatherHistoryDAO.insertWeatherHistory(history);
-        history = null; //For reload purpose
+    public void addHistory(@NonNull WeatherHistory hist) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                weatherHistoryDAO.insertWeatherHistory(hist);
+                synchronized (weatherHistoryDAO) {
+                    history = null; //For reload purpose
+                }
+            }
+        }).start();
     }
 }

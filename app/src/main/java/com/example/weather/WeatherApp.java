@@ -26,7 +26,6 @@ public class WeatherApp extends Application {
           getApplicationContext(),
           WeatherDataBase.class,
           "weather_database")
-                .allowMainThreadQueries()
                 .build();
     }
 
