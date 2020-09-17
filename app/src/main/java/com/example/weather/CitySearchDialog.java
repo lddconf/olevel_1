@@ -20,19 +20,19 @@ public class CitySearchDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        input = new EditText(getActivity());
+        input = new EditText(this.requireContext());
         input.setInputType(InputType.TYPE_CLASS_TEXT);
+
         input.setMaxLines(1);
         input.setSingleLine(true);
 
-        TextInputLayout layout = new TextInputLayout(getActivity());
+        TextInputLayout layout = new TextInputLayout(this.requireContext());
         layout.setPadding(32, 0, 32, 0);
         layout.addView(input);
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
-        alert.setTitle(getString(R.string.find_city_title));
-        alert.setView(layout);
-        alert.setPositiveButton(R.string.ok_label, new DialogInterface.OnClickListener() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(requireActivity())
+                .setTitle(getString(R.string.find_city_title))
+                .setPositiveButton(R.string.ok_label, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         String result = input.getText().toString().trim();
@@ -40,14 +40,13 @@ public class CitySearchDialog extends DialogFragment {
                             ((MainActivity)getActivity()).onCitySearchRequested(result);
                         }
                     }
-                }
-        );
-        alert.setNegativeButton(R.string.cancel_label, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                //Nothing to do
-            }
-        });
+                })
+                .setNegativeButton(R.string.cancel_label, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        //Nothing to do
+                    }
+                }).setView(layout);
 
         if (savedInstanceState != null) {
             String saved = savedInstanceState.getString(inputKey);

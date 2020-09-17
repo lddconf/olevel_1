@@ -169,8 +169,8 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                 updatedWeather = new WeatherEntity(weatherData); //Mapping
                 synchronized (weathers) {
                     weathers.put(city, updatedWeather);
-                    bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
                 }
+                bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
             } else { //City not found or some other error
                 bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, weatherData.getErrorMessage()));
             }
@@ -202,8 +202,8 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                     updatedWeather = new WeatherEntity(weatherData); //Mapping
                     synchronized (weathers) {
                         weathers.put(city, updatedWeather);
-                        bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
                     }
+                    bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
                 } else { //City not found or some other error
                     bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, weatherData.getErrorMessage()));
                 }

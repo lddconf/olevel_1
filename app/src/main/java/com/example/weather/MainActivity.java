@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,6 +29,10 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
+import com.example.weather.history.WeatherCity;
+import com.example.weather.history.WeatherHistory;
+import com.example.weather.history.WeatherIcon;
+import com.example.weather.history.view.WeatherHistoryList;
 import com.example.weather.weather.CityWeatherSettings;
 import com.example.weather.weather.WeatherDisplayFragment;
 import com.example.weather.weather.WeatherEntity;
@@ -36,6 +41,7 @@ import com.example.weather.weatherprovider.openweatherorg.OpenWeatherProviderEve
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherSearchResultEvent;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.Subscribe;
 
@@ -48,7 +54,6 @@ import java.util.Objects;
  */
 public class MainActivity extends AppCompatActivity {
     private Toolbar mainToolBar;
-    //private WeatherDisplayOptions options;
     private ArrayList<CityWeatherSettings> mCityWeatherList;
     private CityWeatherSettings currentCityWeather;
 
@@ -103,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         userSettings = UserSettings.getUserSettings();
+        loadPreferences();
 
         restoreSettingsFromBundle(savedInstanceState);
 
@@ -114,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
         bindOpenWeatherService();
 
         if ( mCityWeatherList == null ) {
+
             //For fist run build data from old state
             restoreSettings();
         }
@@ -127,11 +134,33 @@ public class MainActivity extends AppCompatActivity {
         onDebug("onCreate");
     }
 
+    private void savePreferences() {
+        SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        Gson gson = new Gson();
+        String options = gson.toJson(userSettings);
+        editor.putString(mainActivityViewOptionsKey, options);
+        editor.apply();
+    }
+
+    private void loadPreferences() {
+        SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+        String usettings = sharedPref.getString(mainActivityViewOptionsKey, "");
+        if ( usettings.length() > 0 ) {
+            Gson gson = new Gson();
+            UserSettings loadedUserSettings = gson.fromJson(usettings, UserSettings.class);
+            if ( loadedUserSettings != null ) {
+                userSettings = loadedUserSettings;
+            }
+        }
+    }
+
     private void setupNavigationDrawer() {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_favorites, R.id.nav_about, R.id.nav_weather_details)
+                R.id.nav_favorites, R.id.nav_about, R.id.nav_weather_details, R.id.nav_feedback, R.id.nav_history)
                 .setDrawerLayout(drawer)
                 .build();
 
@@ -201,12 +230,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setHistory() {
+
+        setFragment(WeatherHistoryList.newInstance());
+    }
+
     private void setSettingsFragment() {
         WeatherDisplayOptionsFragment settings = new WeatherDisplayOptionsFragment();
         Bundle arguments = new Bundle();
         arguments.putSerializable(WeatherDisplayOptionsFragment.DisplayOptionsKey, userSettings.getOptions());
         settings.setArguments(arguments);
         settings.setOnThemeChangedListener(() -> {
+            saveOptionIfNeeded();
             recreate();
         });
         setFragment(settings);
@@ -268,6 +303,9 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.nav_weather_details:
                     setCurrentWeather();
                     break;
+                case R.id.nav_history:
+                    setHistory();
+                    break;
             }
             lastSelectedSection = id;
         }
@@ -303,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                 displayMessage(event.getErrorDescription());
                 break;
             case REQUEST_COMPLETED:
-                updateWeatherData();
+                updateWeatherDataFor(event.getCity());
                 updateWeatherView();
                 break;
         }
@@ -356,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
                     mCityWeatherList.add(0, currentCityWeather);
                     mCityWeatherList.remove(cws);
                     currentCityWeather = cws;
-                    navViewDisplayCity();
+                    //navViewDisplayCity();
                     navigateTo(R.id.nav_favorites);
                     navigateTo(R.id.nav_weather_details);
                     return;
@@ -370,7 +408,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isBinded) {
                     Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
                 }
-                navViewDisplayCity();
+                //navViewDisplayCity();
             }
             navigateTo(R.id.nav_favorites);
             navigateTo(R.id.nav_weather_details);
@@ -448,13 +486,29 @@ public class MainActivity extends AppCompatActivity {
                 userSettings.getOptions());
     }
 
+    private void logRequestToDataBase(@NonNull CityID cityID, @NonNull WeatherEntity weatherEntity) {
+        long cityId = WeatherApp.getInstance().getWeatherCityDAO().getOrMakeCityId(WeatherCity.makeFrom(cityID));
+        long iconId = WeatherApp.getInstance().getWeatherIconsDAO().getOrMakeIconId(WeatherIcon.makeFrom(weatherEntity));
+        WeatherApp.getInstance().getWeatherHistoryDAO().insertWeatherHistory(WeatherHistory.make(weatherEntity, cityId, iconId));
+    }
 
-    private void updateWeatherData() {
+    private void updateWeatherDataFor(CityID city) {
         if (!isBinded) return;
-        currentCityWeather.setWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherFor(currentCityWeather.getCity()));
-        for (CityWeatherSettings cs : mCityWeatherList) {
-            cs.setWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherFor(cs.getCity()));
-            cs.addWeekForecastWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherWeekForecastFor(cs.getCity()));
+
+        WeatherEntity weather = Objects.requireNonNull(openWeatherOrgService).getWeatherFor(city);
+
+        if ( weather != null ) {
+            logRequestToDataBase(city, weather);
+        }
+        if ( currentCityWeather.getCity().equals(city)) {
+            currentCityWeather.setWeather(weather);
+        } else {
+            for (CityWeatherSettings cs : mCityWeatherList) {
+                if (cs.getCity().equals(city)) {
+                    cs.setWeather(weather);
+                    cs.addWeekForecastWeather(Objects.requireNonNull(openWeatherOrgService).getWeatherWeekForecastFor(cs.getCity()));
+                }
+            }
         }
     }
 
@@ -491,6 +545,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         unregisterReceiver(onCitySearchResultReceiver);
         unregisterReceiver(onWeatherUpdateReceiver);
+        savePreferences();
         onDebug("onStop");
     }
 

@@ -40,7 +40,7 @@ public class CityID implements Serializable {
     }
 
     @Override
-    public boolean equals(@Nullable Object obj) {
+    public boolean equals(Object obj) {
         if ( obj instanceof CityID ) {
             CityID rval = (CityID)obj;
             if ( rval == null ) {
@@ -49,5 +49,10 @@ public class CityID implements Serializable {
             return rval.id == this.id;
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 }
