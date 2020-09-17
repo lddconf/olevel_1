@@ -29,7 +29,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.weater.WifiStateChangedReceiver;
 import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
 import com.example.weather.history.WeatherCity;
 import com.example.weather.history.WeatherHistory;
