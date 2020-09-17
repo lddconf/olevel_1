@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.weater.WifiStateChangedReceiver;
 import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
 import com.example.weather.history.WeatherCity;
 import com.example.weather.history.WeatherHistory;
@@ -82,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBinded = false;
     private OpenWeatherOrgService.OpenWeatherOrgBinder openWeatherOrgService;
 
+    private WifiStateChangedReceiver wifiStateChangedReceiver;
+
     private ServiceConnection openWeatherOrgServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -128,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
         setupActionBar();
         setupNavigationDrawer();
         setOnClickForSideMenuItems();
+        setupWifiStateChangedMonitor();
 
         lastSelectedSection = -1;
         searchDialog =  new CitySearchDialog();
@@ -505,6 +510,11 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void setupWifiStateChangedMonitor() {
+        wifiStateChangedReceiver = new WifiStateChangedReceiver();
+    }
+
+
     private void updateWeatherDataFor(CityID city) {
         if (!isBinded) return;
 
@@ -550,6 +560,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         registerReceiver(onCitySearchResultReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_FINISHED));
         registerReceiver(onWeatherUpdateReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_FINISHED));
+        registerReceiver(wifiStateChangedReceiver, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
         onDebug("onStart");
     }
 
@@ -558,6 +569,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         unregisterReceiver(onCitySearchResultReceiver);
         unregisterReceiver(onWeatherUpdateReceiver);
+        unregisterReceiver(wifiStateChangedReceiver);
         onDebug("onStop");
     }
 
