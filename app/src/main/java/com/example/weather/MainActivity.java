@@ -54,6 +54,7 @@ import com.google.gson.Gson;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -62,6 +63,7 @@ import java.util.Objects;
  */
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 0x5151;
+    private static final double LOCATION_NOT_INIT = -180;
 
     private Toolbar mainToolBar;
     private ArrayList<CityWeatherSettings> mCityWeatherList;
@@ -80,6 +82,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String mainActivityCityListKey = "AppMainActivityCityListKey";
     private static final String mainActivityLastSelectedSectionKey = "AppMainActivityLastSelectedSectionKey";
     private static final String mainActivityCurrentCityKey = "AppMainActivityCurrentCityKey";
+
+    private static final String mainActivityLastLongitudeKey = "AppMainActivityLastLongitudeKey";
+    private static final String mainActivityLastLatitudeKey = "AppMainActivityLastLatitudeKey";
 
     public static final String mainActivityViewOptionsKey = "AppMainActivityViewOptions";
 
@@ -104,15 +109,17 @@ public class MainActivity extends AppCompatActivity {
             isBinded = true;
 
             //Refresh data for current city
-            if ( !Objects.requireNonNull(userSettings).isUseGPSTracing() && currentCityWeather.getCity() != null) {
-                openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
-            } else {
+            if ( Objects.requireNonNull(userSettings).isUseGPSTracing() || currentCityWeather.getCity() == null ) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
+                        if ( lastLongitude != LOCATION_NOT_INIT ) {
+                            openWeatherOrgService.findForecastFor(lastLatitude, lastLongitude);
+                        }
                     }
                 });
+            } else {
+                openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
             }
         }
 
@@ -131,6 +138,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        lastLongitude = LOCATION_NOT_INIT;
+        lastLatitude  = LOCATION_NOT_INIT;
 
         userSettings = UserSettings.getUserSettings();
         loadPreferences();
@@ -168,7 +178,9 @@ public class MainActivity extends AppCompatActivity {
         userSettings.setCurrentPlace(currentCityWeather.getCity());
 
         for (int i = 0; i < mCityWeatherList.size(); i++) {
-            userSettings.addOtherPlace(Objects.requireNonNull(mCityWeatherList.get(i)).getCity());
+            if ( !mCityWeatherList.get(i).equals(currentCityWeather) ) {
+                userSettings.addOtherPlace(Objects.requireNonNull(mCityWeatherList.get(i)).getCity());
+            }
         }
 
 
@@ -211,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
         updateWeatherView();
     }
 
-
     private void setCityListFragment() {
         citySelectionFragment = new CitySelectionFragment();
         citySelectionFragment.setOnCityViewFragmentEvent(new CitySelectionFragment.OnCityViewFragmentEvent() {
@@ -226,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
                             mCityWeatherList.remove(index);
                             mCityWeatherList.add(0, currentCityWeather);
                             currentCityWeather = wsettings;
+                            userSettings.setUseGPSTracing(false);
                             navigateTo(R.id.nav_weather_details);
                         }
                     }
@@ -244,7 +256,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void navViewDisplayCity() {
-        String city = currentCityWeather.getCity().getName();
+        String city = getString(R.string.not_avaliable);
+        if (currentCityWeather.getCity() != null ) {
+            city = currentCityWeather.getCity().getName();
+        }
+
         citySelectItem.setTitle(city);
     }
 
@@ -376,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
             case CONNECTION_ERROR:
                 displayMessage(event.getErrorDescription());
                 break;
-            case REQUEST_COMPLETED:
+            case REQUEST_COMPLETED_KEYWORD:
                 updateWeatherDataFor(event.getCity());
                 updateWeatherView();
                 break;
@@ -406,20 +422,30 @@ public class MainActivity extends AppCompatActivity {
             case CONNECTION_ERROR:
                 displayMessage(event.getErrorDescription());
                 break;
-            case REQUEST_COMPLETED:
+            case REQUEST_COMPLETED_KEYWORD:
                 //Nothing found
                 CitySelectionDialogFragment dialogFragment =
                         CitySelectionDialogFragment.newInstance(event.getSearchDetails(), event.getKeyword());
                 dialogFragment.show(getSupportFragmentManager(),
                         "dialog_fragment");
                 break;
+            case REQUEST_COMPLETED_LAT_LONG:
+                //Try to add new city
+                userSettings.setUseGPSTracing(true);
+                if ( event.getSearchDetails().size() > 0 ) {
+                    addNewCity(event.getSearchDetails().get(0).getCityID());
+                }
+                break;
         }
     }
 
-    @Subscribe
-    public void addNewCity(SearchEngineCitySelectedEvent event) {
-        if (event.getCityID() != null) {
-            if (currentCityWeather.getCity().equals(event.getCityID())) {
+    private void addNewCity(CityID cityID) {
+        if ( cityID == null ) return;
+        if ( currentCityWeather.getCity() != null ) {
+            if (currentCityWeather.getCity().equals(cityID)) {
+                if ( currentCityWeather.getWeather() == null ) {
+                    Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+                }
                 navigateTo(R.id.nav_weather_details);
                 return; //already exist in current place
             }
@@ -427,28 +453,49 @@ public class MainActivity extends AppCompatActivity {
             //Check selected city for other places
             for (CityWeatherSettings cws : mCityWeatherList
             ) {
-                if (cws.getCity().equals(event.getCityID())) {
+                if (cws.getCity().equals(cityID)) {
                     mCityWeatherList.add(0, currentCityWeather);
                     mCityWeatherList.remove(cws);
                     currentCityWeather = cws;
+                    if ( currentCityWeather.getWeather() == null ) {
+                        Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+                    }
                     //navViewDisplayCity();
                     navigateTo(R.id.nav_favorites);
                     navigateTo(R.id.nav_weather_details);
                     return;
                 }
             }
+        }
 
-            //Add new city
-            if (!currentCityWeather.getCity().equals(event.getCityID())) {
-                mCityWeatherList.add(0, currentCityWeather);
-                currentCityWeather = new CityWeatherSettings(event.getCityID(), new WeatherEntity(), userSettings.getOptions());
-                if (isBinded) {
-                    Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+        //Add new city
+        if ( currentCityWeather.getCity() != null && !currentCityWeather.getCity().equals(cityID) ) {
+            boolean contains = false;
+            for (CityWeatherSettings cws : mCityWeatherList
+            ) {
+                if (cws.getCity().equals(cityID)) {
+                    contains = true;
                 }
-                //navViewDisplayCity();
             }
-            navigateTo(R.id.nav_favorites);
-            navigateTo(R.id.nav_weather_details);
+            if ( !contains ) {
+                mCityWeatherList.add(0, currentCityWeather);
+            }
+        }
+        currentCityWeather = new CityWeatherSettings(cityID, new WeatherEntity(), userSettings.getOptions());
+        if (isBinded) {
+            Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
+        }
+
+        navigateTo(R.id.nav_favorites);
+        navigateTo(R.id.nav_weather_details);
+    }
+
+
+    @Subscribe
+    public void addNewCity(SearchEngineCitySelectedEvent event) {
+        userSettings.setUseGPSTracing(false);
+        if (event.getCityID() != null) {
+            addNewCity(event.getCityID());
         }
     }
 
@@ -639,7 +686,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void locationChanged(double latitude, double longitude) {
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                lastLatitude = latitude;
+                lastLongitude = longitude;
+                if ( isBinded && userSettings.isUseGPSTracing()) {
+                    openWeatherOrgService.findForecastFor(latitude, longitude);
+                }
+            }
+        });
     }
 
     private void requestLocation() {
@@ -652,7 +708,7 @@ public class MainActivity extends AppCompatActivity {
 
         String provider = locationManager.getBestProvider(criteria, true);
         if (provider != null) {
-            locationManager.requestLocationUpdates(provider, 15000, 10, new LocationListener() {
+            locationManager.requestLocationUpdates(provider, 3000, 10, new LocationListener() {
                 @Override
                 public void onLocationChanged(@NonNull Location location) {
                     double latitude = location.getLatitude();
@@ -667,16 +723,13 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onProviderEnabled(@NonNull String provider) {
-
                 }
 
                 @Override
                 public void onProviderDisabled(@NonNull String provider) {
-
                 }
             });
         }
-
     }
 
     @Override
@@ -717,6 +770,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.actionFindLocation:
+                userSettings.setUseGPSTracing(true);
+                Objects.requireNonNull(openWeatherOrgService).findForecastFor(lastLatitude, lastLongitude);
                 return true;
             case R.id.actionAdd:
                 searchCity();
@@ -760,6 +815,10 @@ public class MainActivity extends AppCompatActivity {
         outState.putSerializable(mainActivityCurrentCityKey, currentCityWeather);
         outState.putSerializable(mainActivityCityListKey, mCityWeatherList);
         outState.putSerializable(mainActivityLastSelectedSectionKey, lastSelectedSection);
+
+        outState.putDouble(mainActivityLastLatitudeKey, lastLatitude);
+        outState.putDouble(mainActivityLastLongitudeKey, lastLongitude);
+
         onStorePlacesInUserSettings();
 
         onDebug("onSaveInstanceState");
@@ -771,6 +830,10 @@ public class MainActivity extends AppCompatActivity {
             if ( savedInstanceState == null ) return;
             lastSelectedSection = savedInstanceState.getInt(mainActivityLastSelectedSectionKey);
             currentCityWeather = (CityWeatherSettings)savedInstanceState.getSerializable(mainActivityCurrentCityKey);
+
+            lastLatitude = savedInstanceState.getDouble(mainActivityLastLatitudeKey);
+            lastLongitude = savedInstanceState.getDouble(mainActivityLastLongitudeKey);
+
             @SuppressWarnings("unchecked")
             ArrayList<CityWeatherSettings> restoredCityList = (ArrayList<CityWeatherSettings>)savedInstanceState.getSerializable(mainActivityCityListKey);
             if ( restoredCityList != null ) {

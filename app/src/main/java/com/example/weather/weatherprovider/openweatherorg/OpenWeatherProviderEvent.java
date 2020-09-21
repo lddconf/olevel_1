@@ -12,7 +12,7 @@ public class OpenWeatherProviderEvent implements Serializable {
     private float latitude;
 
     public enum OWeatherResult implements Serializable {
-        REQUEST_COMPLETED, CONNECTION_ERROR;
+        REQUEST_COMPLETED_KEYWORD, REQUEST_COMPLETED_LAT_LONG, CONNECTION_ERROR;
     }
 
     public OpenWeatherProviderEvent( OWeatherResult code, CityID city ) {

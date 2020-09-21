@@ -18,18 +18,20 @@ public class UserSettings implements Serializable {
     private String username;
     private int avatarID;
     private boolean useGPSTracing;
+
     private WeatherDisplayOptions options;
 
     @Expose(serialize = false, deserialize = false)
     private static UserSettings settings;
 
     private UserSettings() {
-        currentPlace = new CityID("Moscow", "RU", 524901);
-        otherPlaces = new LinkedHashSet<>();
 
+        currentPlace = null;//new CityID("Moscow", "RU", 524901);
+        otherPlaces = new LinkedHashSet<>();
+/*
         otherPlaces.add(new CityID("New York", "US", 5128638));
         otherPlaces.add(new CityID("Berlin", "DE", 2950159));
-
+*/
         username = "User";
         avatarID = R.mipmap.ic_launcher_round;
 

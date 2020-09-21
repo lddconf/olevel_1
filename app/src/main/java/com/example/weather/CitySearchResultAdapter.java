@@ -55,7 +55,6 @@ public class CitySearchResultAdapter extends RecyclerView.Adapter<CitySearchResu
 
             cityNameView.setOnClickListener(view -> handleOnItemClick());
             briefTempView.setOnClickListener(v -> handleOnItemClick());
-
         }
 
         private void handleOnItemClick() {

@@ -76,7 +76,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         openWeather = retrofit.create(OpenWeatherOrgRetrofitServices.class);
     }
 
-    private void parseFindData( final String keywords, final FindData findData ) {
+    private void parseFindData( final String keywords, final FindData findData, boolean isCoord ) {
         if ( findData.getCod() == 200 ) { //Request completed
             //Build found list
             LinkedList<OpenWeatherSearchResultEvent.WeatherSearchDetails> found = new LinkedList<>();
@@ -86,7 +86,8 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                         wd.getCoord(),
                         wd.getSys().getCountry()));
             }
-            bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED,
+            bus.post(new OpenWeatherSearchResultEvent(isCoord ? OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED_LAT_LONG
+                    : OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED_KEYWORD,
                     found, keywords));
         } else { //City not found or some other error
             bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, findData.getMessage(), keywords));
@@ -114,7 +115,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
             }
             final FindData findData = response.body();
 
-            parseFindData(keywords, findData);
+            parseFindData(keywords, findData, false);
         } catch (IOException e) {
             bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, "Connection error", keywords));
         } catch (Exception e) {
@@ -138,7 +139,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                     return;
                 }
                 final FindData findData = response.body();
-                parseFindData(keywords, findData);
+                parseFindData(keywords, findData, false);
             }
 
             @Override
@@ -151,7 +152,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
     public void findForecastForAsync(double lat, double lon) {
         String keywords = String.format(Locale.getDefault(), "lat=%.3f,lon=%.3f", lat, lon);
         //Request data
-        openWeather.findWeatherForLatLong(lat, lon, WEATHER_UNITS, WEATHER_API_KEY).enqueue(new Callback<FindData>() {
+        openWeather.findWeatherForLatLong(lat, lon, WEATHER_UNITS, 1, WEATHER_API_KEY).enqueue(new Callback<FindData>() {
             @Override
             public void onResponse(Call<FindData> call, Response<FindData> response) {
 
@@ -166,7 +167,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                     return;
                 }
                 final FindData findData = response.body();
-                parseFindData(keywords, findData);
+                parseFindData(keywords, findData, true);
             }
 
             @Override
@@ -198,7 +199,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                 synchronized (weathers) {
                     weathers.put(city, updatedWeather);
                 }
-                bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
+                bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED_KEYWORD, city));
             } else { //City not found or some other error
                 bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, weatherData.getErrorMessage()));
             }
@@ -231,7 +232,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
                     synchronized (weathers) {
                         weathers.put(city, updatedWeather);
                     }
-                    bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED, city));
+                    bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.REQUEST_COMPLETED_KEYWORD, city));
                 } else { //City not found or some other error
                     bus.post(new OpenWeatherProviderEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, city, weatherData.getErrorMessage()));
                 }

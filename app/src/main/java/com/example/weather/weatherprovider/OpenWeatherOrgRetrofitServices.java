@@ -15,5 +15,5 @@ public interface OpenWeatherOrgRetrofitServices {
     Call<FindData> findWeatherFor(@Query("q") String keyword, @Query("units") String units, @Query("appid") String keyApi);
 
     @GET("data/2.5/find")
-    Call<FindData> findWeatherForLatLong(@Query("lat") double latitude, @Query("lon") double longitude, @Query("units") String units, @Query("appid") String keyApi);
+    Call<FindData> findWeatherForLatLong(@Query("lat") double latitude, @Query("lon") double longitude, @Query("units") String units, @Query("cnt") int count, @Query("appid") String keyApi);
 }
