@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -12,6 +13,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.ui.AppBarConfiguration;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -19,6 +21,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -54,6 +61,8 @@ import java.util.Objects;
  * Main Weather Info Activity
  */
 public class MainActivity extends AppCompatActivity {
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 0x5151;
+
     private Toolbar mainToolBar;
     private ArrayList<CityWeatherSettings> mCityWeatherList;
     private CityWeatherSettings currentCityWeather;
@@ -85,14 +94,26 @@ public class MainActivity extends AppCompatActivity {
 
     private WifiStateChangedReceiver wifiStateChangedReceiver;
 
+    private double lastLongitude;
+    private double lastLatitude;
+
     private ServiceConnection openWeatherOrgServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            openWeatherOrgService = (OpenWeatherOrgService.OpenWeatherOrgBinder)iBinder;
+            openWeatherOrgService = (OpenWeatherOrgService.OpenWeatherOrgBinder) iBinder;
             isBinded = true;
 
             //Refresh data for current city
-            openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
+            if ( !Objects.requireNonNull(userSettings).isUseGPSTracing() && currentCityWeather.getCity() != null) {
+                openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                    }
+                });
+            }
         }
 
         @Override
@@ -110,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         userSettings = UserSettings.getUserSettings();
         loadPreferences();
 
@@ -122,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
         bindOpenWeatherService();
 
-        if ( mCityWeatherList == null ) {
+        if (mCityWeatherList == null) {
 
             //For fist run build data from old state
             restoreSettings();
@@ -133,8 +155,10 @@ public class MainActivity extends AppCompatActivity {
         setOnClickForSideMenuItems();
         setupWifiStateChangedMonitor();
 
+        checkPermissions();
+
         lastSelectedSection = -1;
-        searchDialog =  new CitySearchDialog();
+        searchDialog = new CitySearchDialog();
         onDebug("onCreate");
     }
 
@@ -157,10 +181,10 @@ public class MainActivity extends AppCompatActivity {
     private void loadPreferences() {
         SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
         String usettings = sharedPref.getString(mainActivityViewOptionsKey, "");
-        if ( usettings.length() > 0 ) {
+        if (usettings.length() > 0) {
             Gson gson = new Gson();
             UserSettings loadedUserSettings = gson.fromJson(usettings, UserSettings.class);
-            if ( loadedUserSettings != null ) {
+            if (loadedUserSettings != null) {
                 userSettings = loadedUserSettings;
             }
         }
@@ -196,8 +220,8 @@ public class MainActivity extends AppCompatActivity {
                 setupCityViewFragment();
                 citySelectionFragment.setOnItemSelectedCallBack(index -> {
                     //Close weather selection
-                    if ( index < mCityWeatherList.size() ) {
-                        if ( index >= 0 ) {
+                    if (index < mCityWeatherList.size()) {
+                        if (index >= 0) {
                             CityWeatherSettings wsettings = mCityWeatherList.get(index);
                             mCityWeatherList.remove(index);
                             mCityWeatherList.add(0, currentCityWeather);
@@ -233,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
         setFragment(fragment);
 
         //Request new weather if needed
-        if ( currentCityWeather.getWeather() == null ) {
+        if (currentCityWeather.getWeather() == null) {
             if (isBinded) {
                 Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
             }
@@ -284,8 +308,8 @@ public class MainActivity extends AppCompatActivity {
         List<Fragment> fragments = fm.getFragments();
         if (fragments.size() == 0) return;
         Fragment lastFragment = fragments.get(fragments.size() - 1);
-        if ( lastFragment instanceof WeatherDisplayOptionsFragment ) {
-            userSettings.setOptions(((WeatherDisplayOptionsFragment)lastFragment).getCurrentOptions());
+        if (lastFragment instanceof WeatherDisplayOptionsFragment) {
+            userSettings.setOptions(((WeatherDisplayOptionsFragment) lastFragment).getCurrentOptions());
             for (CityWeatherSettings w : mCityWeatherList) {
                 w.setWeatherDisplayOptions(userSettings.getOptions());
             }
@@ -297,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showNavigateFragment(int id) {
         saveOptionIfNeeded();
         drawer.closeDrawers();
-        if (lastSelectedSection != id ) {
+        if (lastSelectedSection != id) {
             switch (id) {
                 case R.id.nav_favorites:
                     setCityListFragment();
@@ -334,9 +358,9 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver onWeatherUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final OpenWeatherProviderEvent result = (OpenWeatherProviderEvent)intent.getSerializableExtra(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_RESULT);
+            final OpenWeatherProviderEvent result = (OpenWeatherProviderEvent) intent.getSerializableExtra(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_RESULT);
 
-            if ( result ==  null ) return;
+            if (result == null) return;
             // Потокобезопасный вывод данных
             runOnUiThread(new Runnable() {
                 @Override
@@ -347,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void onOWeatherEvent(@NonNull  OpenWeatherProviderEvent event) {
+    private void onOWeatherEvent(@NonNull OpenWeatherProviderEvent event) {
         switch (event.getResultCode()) {
             case CONNECTION_ERROR:
                 displayMessage(event.getErrorDescription());
@@ -362,9 +386,9 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver onCitySearchResultReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final  OpenWeatherSearchResultEvent event
-                    = (OpenWeatherSearchResultEvent)intent.getSerializableExtra(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_RESULT);
-            if ( event != null ) {
+            final OpenWeatherSearchResultEvent event
+                    = (OpenWeatherSearchResultEvent) intent.getSerializableExtra(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_RESULT);
+            if (event != null) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -374,6 +398,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
 
     //Handler for city search result
     public void onFoundCities(@NonNull OpenWeatherSearchResultEvent event) {
@@ -393,16 +418,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Subscribe
     public void addNewCity(SearchEngineCitySelectedEvent event) {
-        if ( event.getCityID() != null ) {
-            if ( currentCityWeather.getCity().equals( event.getCityID()) ) {
+        if (event.getCityID() != null) {
+            if (currentCityWeather.getCity().equals(event.getCityID())) {
                 navigateTo(R.id.nav_weather_details);
                 return; //already exist in current place
             }
 
             //Check selected city for other places
-            for ( CityWeatherSettings cws: mCityWeatherList
-                 ) {
-                if ( cws.getCity().equals(event.getCityID())) {
+            for (CityWeatherSettings cws : mCityWeatherList
+            ) {
+                if (cws.getCity().equals(event.getCityID())) {
                     mCityWeatherList.add(0, currentCityWeather);
                     mCityWeatherList.remove(cws);
                     currentCityWeather = cws;
@@ -414,9 +439,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //Add new city
-            if ( !currentCityWeather.getCity().equals( event.getCityID()) ) {
+            if (!currentCityWeather.getCity().equals(event.getCityID())) {
                 mCityWeatherList.add(0, currentCityWeather);
-                currentCityWeather = new CityWeatherSettings( event.getCityID(), new WeatherEntity(), userSettings.getOptions());
+                currentCityWeather = new CityWeatherSettings(event.getCityID(), new WeatherEntity(), userSettings.getOptions());
                 if (isBinded) {
                     Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(currentCityWeather.getCity());
                 }
@@ -444,18 +469,18 @@ public class MainActivity extends AppCompatActivity {
         List<Fragment> fragments = fm.getFragments();
         if (fragments.size() == 0) return;
         Fragment lastFragment = fragments.get(fragments.size() - 1);
-        if ( lastFragment == null) return;
-        if ( lastFragment instanceof WeatherDisplayFragment ) {
-            ((WeatherDisplayFragment)lastFragment).setWeather(currentCityWeather.getWeather());
+        if (lastFragment == null) return;
+        if (lastFragment instanceof WeatherDisplayFragment) {
+            ((WeatherDisplayFragment) lastFragment).setWeather(currentCityWeather.getWeather());
         }
-        if ( lastFragment instanceof CitySelectionFragment ) {
-            ((CitySelectionFragment)lastFragment).setWeatherSettingsArray(mCityWeatherList);
+        if (lastFragment instanceof CitySelectionFragment) {
+            ((CitySelectionFragment) lastFragment).setWeatherSettingsArray(mCityWeatherList);
         }
     }
 
     private void refreshWeatherDataForOtherPlaces() {
         //Request new weather data from internet
-        if ( !isBinded) return;
+        if (!isBinded) return;
         for (int i = 0; i < mCityWeatherList.size(); i++) {
             Objects.requireNonNull(openWeatherOrgService).refreshWeatherDataFor(mCityWeatherList.get(i).getCity());
         }
@@ -465,11 +490,11 @@ public class MainActivity extends AppCompatActivity {
      * Setup class weather info
      */
     private synchronized void prepareWeatherData() {
-        if ( !isBinded) return;
+        if (!isBinded) return;
         CityID[] otherPlaces = userSettings.getOtherPacesList();
         mCityWeatherList = new ArrayList<>(otherPlaces.length);
 
-        for ( CityID city: otherPlaces ) {
+        for (CityID city : otherPlaces) {
             CityWeatherSettings cs = new CityWeatherSettings(city,
                     Objects.requireNonNull(openWeatherOrgService).getWeatherFor(city),
                     userSettings.getOptions());
@@ -486,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
         CityID[] otherPlaces = userSettings.getOtherPacesList();
         mCityWeatherList = new ArrayList<>(otherPlaces.length);
 
-        for ( CityID city: otherPlaces ) {
+        for (CityID city : otherPlaces) {
             CityWeatherSettings cs = new CityWeatherSettings(city,
                     null,
                     userSettings.getOptions());
@@ -519,10 +544,10 @@ public class MainActivity extends AppCompatActivity {
 
         WeatherEntity weather = Objects.requireNonNull(openWeatherOrgService).getWeatherFor(city);
 
-        if ( weather != null ) {
+        if (weather != null) {
             logRequestToDataBase(city, weather);
         }
-        if ( currentCityWeather.getCity().equals(city)) {
+        if (currentCityWeather.getCity().equals(city)) {
             currentCityWeather.setWeather(weather);
         } else {
             for (CityWeatherSettings cs : mCityWeatherList) {
@@ -580,6 +605,79 @@ public class MainActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
     }
 
+    private void checkPermissions() {
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ) {
+            //All ok, can locate
+            requestLocation();
+        } else {
+            requestLocationPermissions();
+        }
+    }
+
+    //Geolocation permission request
+    private void requestLocationPermissions() {
+        ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION},
+                LOCATION_PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length == 2
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED
+            ) {
+                requestLocation();
+            }
+        }
+    }
+
+    private void locationChanged(double latitude, double longitude) {
+
+    }
+
+    private void requestLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+
+        String provider = locationManager.getBestProvider(criteria, true);
+        if (provider != null) {
+            locationManager.requestLocationUpdates(provider, 15000, 10, new LocationListener() {
+                @Override
+                public void onLocationChanged(@NonNull Location location) {
+                    double latitude = location.getLatitude();
+                    double longitude = location.getLongitude();
+                    locationChanged(latitude, longitude);
+                }
+
+                //Если не переопределить, то runtime ошибка под 21 SDK
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+                }
+
+                @Override
+                public void onProviderEnabled(@NonNull String provider) {
+
+                }
+
+                @Override
+                public void onProviderDisabled(@NonNull String provider) {
+
+                }
+            });
+        }
+
+    }
 
     @Override
     public void onBackPressed() {

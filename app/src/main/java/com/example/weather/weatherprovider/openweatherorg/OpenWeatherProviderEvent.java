@@ -8,6 +8,8 @@ public class OpenWeatherProviderEvent implements Serializable {
     private OWeatherResult resultCode;
     private CityID city;
     private String errorDescription;
+    private float longitude;
+    private float latitude;
 
     public enum OWeatherResult implements Serializable {
         REQUEST_COMPLETED, CONNECTION_ERROR;

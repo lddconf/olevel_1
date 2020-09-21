@@ -148,6 +148,34 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
         });
     }
 
+    public void findForecastForAsync(double lat, double lon) {
+        String keywords = String.format(Locale.getDefault(), "lat=%.3f,lon=%.3f", lat, lon);
+        //Request data
+        openWeather.findWeatherForLatLong(lat, lon, WEATHER_UNITS, WEATHER_API_KEY).enqueue(new Callback<FindData>() {
+            @Override
+            public void onResponse(Call<FindData> call, Response<FindData> response) {
+
+                if (response.body() == null) {
+                    bus.post(new OpenWeatherSearchResultEvent(
+                            OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR,
+                            "Empty server reply", keywords ));
+                    return;
+                }
+                if (response.code() != 200) {
+                    bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, "Response code not 200", keywords));
+                    return;
+                }
+                final FindData findData = response.body();
+                parseFindData(keywords, findData);
+            }
+
+            @Override
+            public void onFailure(Call<FindData> call, Throwable t) {
+                bus.post(new OpenWeatherSearchResultEvent(OpenWeatherProviderEvent.OWeatherResult.CONNECTION_ERROR, "Connection error", keywords));
+            }
+        });
+    }
+
     public void updateWeatherForSync(final CityID city) {
         WeatherEntity updatedWeather = null;
         try {

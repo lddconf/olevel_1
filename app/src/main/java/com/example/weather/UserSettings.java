@@ -17,6 +17,7 @@ public class UserSettings implements Serializable {
     private LinkedHashSet<CityID> otherPlaces;
     private String username;
     private int avatarID;
+    private boolean useGPSTracing;
     private WeatherDisplayOptions options;
 
     @Expose(serialize = false, deserialize = false)
@@ -31,6 +32,8 @@ public class UserSettings implements Serializable {
 
         username = "User";
         avatarID = R.mipmap.ic_launcher_round;
+
+        useGPSTracing = true;
 
         options = new WeatherDisplayOptions();
         options.setTemperatureUnit(false);
@@ -99,5 +102,13 @@ public class UserSettings implements Serializable {
         if ( !this.otherPlaces.contains(currentPlace) ) {
             currentPlace = null;
         }
+    }
+
+    public boolean isUseGPSTracing() {
+        return useGPSTracing;
+    }
+
+    public void setUseGPSTracing(boolean useGPSTracing) {
+        this.useGPSTracing = useGPSTracing;
     }
 }

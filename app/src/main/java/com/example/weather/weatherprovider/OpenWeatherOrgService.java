@@ -86,6 +86,10 @@ public class OpenWeatherOrgService extends Service {
             provider.updateWeatherForAsync(city);
         }
 
+        public void findForecastFor(double lat, double lon ) {
+            provider.findForecastForAsync(lat, lon);
+        }
+
         public void refreshCachedWeatherData() {
             provider.refreshWeatherListAsync();
         }
