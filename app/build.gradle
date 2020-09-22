@@ -2,6 +2,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
+    signingConfigs {
+        weatherApp {
+            storePassword '123456'
+            keyPassword '123456'
+            keyAlias 'key0'
+            storeFile file('/home/gremlin/gkb/weather_key1.jks')
+        }
+    }
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
 
@@ -13,18 +21,31 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.weatherApp
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.weatherApp
         }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    flavorDimensions 'version'
+    productFlavors {
+        with_geolocation {
+            dimension 'version'
+            signingConfig signingConfigs.weatherApp
+        }
+        without_geolocation {
+            dimension 'version'
+            signingConfig signingConfigs.weatherApp
+        }
     }
 }
 
@@ -46,6 +67,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation "android.arch.persistence.room:runtime:1.1.1"
+    implementation 'com.google.android.gms:play-services-auth:18.1.0'
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     testImplementation 'junit:junit:4.13'

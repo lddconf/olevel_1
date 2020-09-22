@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:compat="http://schemas.android.com/apk/res-auto" >
+    <item
+        android:id="@+id/actionRefresh"
+        compat:showAsAction="ifRoom"
+        android:icon="@drawable/ic_baseline_autorenew_24"
+        android:title="@string/refresh_label">
+    </item>
+    <item
+        android:id="@+id/actionFindLocation"
+        compat:showAsAction="ifRoom"
+        android:icon="@drawable/ic_baseline_my_location_24"
+        android:enabled="false"
+        android:visible="false"
+        android:title="@string/locate_label">
+    </item>
+    <item
+        android:id="@+id/actionAdd"
+        compat:showAsAction="ifRoom"
+        android:icon="@drawable/ic_baseline_add_location_24"
+        android:title="@string/add_new_place_action_label">
+    </item>
+</menu>

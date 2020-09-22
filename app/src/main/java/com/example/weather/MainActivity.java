@@ -34,6 +34,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.weather.diplayoption.WeatherDisplayOptionsFragment;
@@ -47,14 +49,21 @@ import com.example.weather.weather.WeatherEntity;
 import com.example.weather.weatherprovider.OpenWeatherOrgService;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherProviderEvent;
 import com.example.weather.weatherprovider.openweatherorg.OpenWeatherSearchResultEvent;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
+import com.squareup.picasso.Picasso;
 
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -64,8 +73,17 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 0x5151;
     private static final double LOCATION_NOT_INIT = -180;
+    private static final int GOOGLE_SIGN_IN = 0x4422;
 
     private Toolbar mainToolBar;
+
+    private com.google.android.gms.common.SignInButton buttonSignIn;
+    private GoogleSignInClient googleSignInClient;
+    private TextView userName;
+    private TextView userEmail;
+    private ImageView avatar;
+    private MenuItem logoutItem;
+
     private ArrayList<CityWeatherSettings> mCityWeatherList;
     private CityWeatherSettings currentCityWeather;
 
@@ -108,16 +126,20 @@ public class MainActivity extends AppCompatActivity {
             openWeatherOrgService = (OpenWeatherOrgService.OpenWeatherOrgBinder) iBinder;
             isBinded = true;
 
-            //Refresh data for current city
-            if ( Objects.requireNonNull(userSettings).isUseGPSTracing() || currentCityWeather.getCity() == null ) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if ( lastLongitude != LOCATION_NOT_INIT ) {
-                            openWeatherOrgService.findForecastFor(lastLatitude, lastLongitude);
+            if ( BuildConfig.FLAVOR.equals("with_geolocation" )) {
+                //Refresh data for current city
+                if (Objects.requireNonNull(userSettings).isUseGPSTracing() || currentCityWeather.getCity() == null) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (lastLongitude != LOCATION_NOT_INIT) {
+                                openWeatherOrgService.findForecastFor(lastLatitude, lastLongitude);
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
+                }
             } else {
                 openWeatherOrgService.refreshWeatherDataFor(currentCityWeather.getCity());
             }
@@ -165,11 +187,99 @@ public class MainActivity extends AppCompatActivity {
         setOnClickForSideMenuItems();
         setupWifiStateChangedMonitor();
 
-        checkPermissions();
+        if ( BuildConfig.FLAVOR.equals("with_geolocation" )) {
+            checkGeoPermissions();
+        }
+
+        setupGoogleAuthentication();
 
         lastSelectedSection = -1;
         searchDialog = new CitySearchDialog();
         onDebug("onCreate");
+    }
+
+    private void setupGoogleAuthentication() {
+        // Конфигурация запроса на регистрацию пользователя, чтобы получить
+        // идентификатор пользователя, его почту и основной профайл
+        // (регулируется параметром)
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        // Получаем клиента для регистрации и данные по клиенту
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
+        buttonSignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                signIn();
+            }
+        });
+
+    }
+
+    // Инициируем регистрацию пользователя
+    private void signIn() {
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
+    }
+
+    private void signOut() {
+        googleSignInClient.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                enableSingIn();
+                navigationView.setCheckedItem(lastSelectedSection);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == GOOGLE_SIGN_IN) {
+            // Когда сюда возвращается Task, результаты аутентификации уже
+            // готовы
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            processSignInResult(task);
+        }
+
+    }
+
+    private void processSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            disableSignIn();
+            updateNavHeader(account);
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure
+            // reason. Please refer to the GoogleSignInStatusCodes class
+            // reference for more information.
+        }
+    }
+
+    private void updateNavHeader(final GoogleSignInAccount account) {
+        if ( account != null ) {
+            userName.setText(account.getDisplayName());
+            userEmail.setText(account.getEmail());
+            Picasso.get().load(account.getPhotoUrl()).placeholder(R.mipmap.ic_launcher).transform(new CircleTransform()).into(avatar);
+        }
+    }
+
+    private void enableSingIn() {
+        userName.setVisibility(View.GONE);
+        userEmail.setVisibility(View.GONE);
+        avatar.setVisibility(View.GONE);
+        buttonSignIn.setVisibility(View.VISIBLE);
+        logoutItem.setVisible(false);
+    }
+
+    private void disableSignIn() {
+        userName.setVisibility(View.VISIBLE);
+        userEmail.setVisibility(View.VISIBLE);
+        avatar.setVisibility(View.VISIBLE);
+        buttonSignIn.setVisibility(View.GONE);
+        logoutItem.setVisible(true);
     }
 
     private void savePreferences() {
@@ -336,7 +446,9 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean showNavigateFragment(int id) {
         saveOptionIfNeeded();
-        drawer.closeDrawers();
+        if ( id != R.id.nav_logout ) {
+            drawer.closeDrawers();
+        }
         if (lastSelectedSection != id) {
             switch (id) {
                 case R.id.nav_favorites:
@@ -357,6 +469,10 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.nav_history:
                     setHistory();
+                    break;
+                case R.id.nav_logout:
+                    id = lastSelectedSection;
+                    signOut();
                     break;
             }
             lastSelectedSection = id;
@@ -632,6 +748,15 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(onCitySearchResultReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_FINISHED));
         registerReceiver(onWeatherUpdateReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_FINISHED));
         registerReceiver(wifiStateChangedReceiver, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
+
+        enableSingIn();
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
+            // Пользователь уже входил, сделаем кнопку недоступной
+            updateNavHeader(account);
+            disableSignIn();
+        }
+
         onDebug("onStart");
     }
 
@@ -652,7 +777,7 @@ public class MainActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
     }
 
-    private void checkPermissions() {
+    private void checkGeoPermissions() {
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(this,
@@ -914,8 +1039,16 @@ public class MainActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         mainToolBar = findViewById(R.id.mainToolbar);
 
+        buttonSignIn = navigationView.getHeaderView(0).findViewById(R.id.sign_in_button);
+        userName = navigationView.getHeaderView(0).findViewById(R.id.nav_header_name);
+        userEmail = navigationView.getHeaderView(0).findViewById(R.id.nav_header_email);
+        avatar = navigationView.getHeaderView(0).findViewById(R.id.nav_header_avatar);
+
+
+
         Menu menuNav = navigationView.getMenu();
         citySelectItem = menuNav.findItem(R.id.nav_weather_details);
+        logoutItem = menuNav.findItem(R.id.nav_logout);
         layout = drawer;
     }
 }

@@ -43,6 +43,17 @@
             android:id="@+id/nav_feedback"
             android:icon="@drawable/ic_baseline_feedback_24"
             android:title="@string/feedback_menu" />
-
     </group>
+
+    <group
+        android:id="@+id/menu_bottom"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_logout"
+            android:visible="false"
+            android:title="@string/nav_header_logout"
+            android:icon="@drawable/ic_baseline_exit_to_app_24"
+            />
+    </group>
+
 </menu>

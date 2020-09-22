@@ -82,5 +82,7 @@
     <string name="search_dialog_title">Search dialog</string>
     <string name="use_build_in_icons_title">Use build in icons</string>
     <string name="history_label">History</string>
+    <string name="nav_header_user_name">User name</string>
+    <string name="nav_header_logout">Logout</string>
 
 </resources>

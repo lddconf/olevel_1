@@ -127,7 +127,7 @@ public class WeatherDisplayFragment extends Fragment {
         dateTimeView = view.findViewById( R.id.dateView );
         temperatureView = view.findViewById( R.id.tempView );
         feelsLikeView = view.findViewById( R.id.feelsLike );
-        weatherView = view.findViewById( R.id.avatar);
+        weatherView = view.findViewById( R.id.nav_header_avatar);
         cloudinessView = view.findViewById( R.id.cloudinessView);
         windView = view.findViewById(R.id.windView);
         pressureView = view.findViewById(R.id.pressureView);
