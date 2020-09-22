@@ -211,6 +211,7 @@ public class OpenWeatherOrgProvider implements WeatherProviderInterface {
     }
 
     public void updateWeatherForAsync(final CityID city) {
+        if ( city == null ) return;
         synchronized (weathers) {
             weathers.put(city, null);
         }
