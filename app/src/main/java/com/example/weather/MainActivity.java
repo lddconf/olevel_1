@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -82,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBinded = false;
     private OpenWeatherOrgService.OpenWeatherOrgBinder openWeatherOrgService;
 
+    private WifiStateChangedReceiver wifiStateChangedReceiver;
+
     private ServiceConnection openWeatherOrgServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -128,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         setupActionBar();
         setupNavigationDrawer();
         setOnClickForSideMenuItems();
+        setupWifiStateChangedMonitor();
 
         lastSelectedSection = -1;
         searchDialog =  new CitySearchDialog();
@@ -137,6 +141,12 @@ public class MainActivity extends AppCompatActivity {
     private void savePreferences() {
         SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
+        userSettings.setCurrentPlace(currentCityWeather.getCity());
+
+        for (int i = 0; i < mCityWeatherList.size(); i++) {
+            userSettings.addOtherPlace(Objects.requireNonNull(mCityWeatherList.get(i)).getCity());
+        }
+
 
         Gson gson = new Gson();
         String options = gson.toJson(userSettings);
@@ -280,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
                 w.setWeatherDisplayOptions(userSettings.getOptions());
             }
             currentCityWeather.setWeatherDisplayOptions(userSettings.getOptions());
+            savePreferences();
         }
     }
 
@@ -302,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.nav_weather_details:
                     setCurrentWeather();
+                    savePreferences();
                     break;
                 case R.id.nav_history:
                     setHistory();
@@ -487,10 +499,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logRequestToDataBase(@NonNull CityID cityID, @NonNull WeatherEntity weatherEntity) {
-        long cityId = WeatherApp.getInstance().getWeatherCityDAO().getOrMakeCityId(WeatherCity.makeFrom(cityID));
-        long iconId = WeatherApp.getInstance().getWeatherIconsDAO().getOrMakeIconId(WeatherIcon.makeFrom(weatherEntity));
-        WeatherApp.getInstance().getWeatherHistoryDAO().insertWeatherHistory(WeatherHistory.make(weatherEntity, cityId, iconId));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long cityId = WeatherApp.getInstance().getWeatherCityDAO().getOrMakeCityId(WeatherCity.makeFrom(cityID));
+                long iconId = WeatherApp.getInstance().getWeatherIconsDAO().getOrMakeIconId(WeatherIcon.makeFrom(weatherEntity));
+                WeatherApp.getInstance().getWeatherHistoryDAO().insertWeatherHistory(WeatherHistory.make(weatherEntity, cityId, iconId));
+            }
+        }).start();
     }
+
+    private void setupWifiStateChangedMonitor() {
+        wifiStateChangedReceiver = new WifiStateChangedReceiver();
+    }
+
 
     private void updateWeatherDataFor(CityID city) {
         if (!isBinded) return;
@@ -537,6 +559,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         registerReceiver(onCitySearchResultReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_SEARCH_FINISHED));
         registerReceiver(onWeatherUpdateReceiver, new IntentFilter(OpenWeatherOrgService.BROADCAST_ACTION_WEATHER_UPDATE_FINISHED));
+        registerReceiver(wifiStateChangedReceiver, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
         onDebug("onStart");
     }
 
@@ -545,7 +568,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         unregisterReceiver(onCitySearchResultReceiver);
         unregisterReceiver(onWeatherUpdateReceiver);
-        savePreferences();
+        unregisterReceiver(wifiStateChangedReceiver);
         onDebug("onStop");
     }
 
@@ -689,6 +712,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         WeatherAppBus.getBus().unregister(this);
+        savePreferences();
         onDebug("onPause");
     }
 

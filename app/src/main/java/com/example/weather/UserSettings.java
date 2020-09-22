@@ -10,6 +10,7 @@ import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class UserSettings implements Serializable {
     private CityID currentPlace;
@@ -81,9 +82,16 @@ public class UserSettings implements Serializable {
         otherPlaces.clear();
     }
 
-    public void addOtherPlaces(CityID[] places ) {
+    public void addOtherPlaces(final CityID...places ) {
         this.otherPlaces.addAll(Arrays.asList(places));
+    }
 
+    public void addOtherPlace(final CityID place ) {
+        this.otherPlaces.add(place);
+    }
+
+    public void addOtherPlaces(final List<CityID> places ) {
+        this.otherPlaces.addAll(places);
     }
 
     public void removeOtherPlaces(CityID[] places ) {

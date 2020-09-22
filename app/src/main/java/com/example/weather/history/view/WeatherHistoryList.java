@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -87,8 +86,21 @@ public class WeatherHistoryList extends Fragment {
                 WeatherApp.getInstance().getWeatherHistoryDAO()
         );
 
-        historyListAdapter = new HistoryListAdapter(requireContext(), historySource);
-        historyList.setAdapter(historyListAdapter);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                historySource.reloadHistoryFromDB(null);
+
+                requireActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        historyListAdapter = new HistoryListAdapter(requireContext(), historySource);
+                        historyList.setAdapter(historyListAdapter);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void findView(View view) {
